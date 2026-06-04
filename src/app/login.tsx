@@ -9,9 +9,10 @@ import {
 } from "react-native";
 import { useAppTheme } from "../contexts/app-theme-context";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 
 export default function App() {
+  const router = useRouter();
   const { isDark, toggleTheme } = useAppTheme();
   const [form, setForm] = useState({
     email: "",
@@ -63,7 +64,7 @@ export default function App() {
                 returnKeyType="done"
               />
             </TextField>
-            <Button className="w-full mt-4">
+            <Button className="w-full mt-4" onPress={()=> router.push("/home")}>
               <Button.Label>LogIn</Button.Label>
             </Button>
           </View>

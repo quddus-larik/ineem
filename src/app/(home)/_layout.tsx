@@ -23,9 +23,9 @@ import {
   SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
 } from "@expo-google-fonts/space-grotesk";
-import { Slot, Stack } from "expo-router";
+import { Slot, Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { HeroUINativeProvider } from "heroui-native";
+import { Avatar, Button, HeroUINativeProvider } from "heroui-native";
 import { useCallback } from "react";
 import { StatusBar, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -33,10 +33,12 @@ import {
   KeyboardAvoidingView,
   KeyboardProvider,
 } from "react-native-keyboard-controller";
-import "../../global.css";
-import { AppThemeProvider } from "../contexts/app-theme-context";
-import { useAppTheme } from "../contexts/app-theme-context";
-import { useUniwind } from "uniwind";
+import "../../../global.css";
+import { AppThemeProvider } from "../../contexts/app-theme-context";
+import { View } from "react-native";
+import { ThemeToggle } from "@/src/components/theme-toggle";
+import { Image } from "expo-image";
+import { useTheme } from "@react-navigation/native";
 
 SplashScreen.setOptions({
   duration: 300,
@@ -48,20 +50,19 @@ SplashScreen.setOptions({
  * Contains the contentWrapper and HeroUINativeProvider configuration
  */
 function AppContent() {
-  const { theme } = useUniwind();
   const contentWrapper = useCallback(
     (children: React.ReactNode) => (
       <KeyboardAvoidingView
         pointerEvents="box-none"
         behavior="padding"
         keyboardVerticalOffset={12}
-        className="flex-1"
       >
         {children}
       </KeyboardAvoidingView>
     ),
     [],
   );
+  const router = useRouter();
 
   return (
     <AppThemeProvider>
@@ -78,12 +79,26 @@ function AppContent() {
           },
         }}
       >
-        {/* Fixed: dark theme = light icons on black, light theme = dark icons on white */}
-        {theme === "dark" ? (
-          <StatusBar barStyle="light-content" backgroundColor="#000000" />
-        ) : (
-          <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-        )}
+        <View className="h-8 bg-background"></View>
+        <View className="h-16 bg-background flex flex-row justify-between items-center px-2">
+          <Button isIconOnly variant="tertiary" onPress={()=> router.back()}>
+            <Image
+              source={{
+                uri: "https://unpkg.com/@mynaui/icons/icons/chevron-left.svg",
+              }}
+              style={{ height: 24, width: 24 }}
+              alt="logo-back"
+            />
+          </Button>
+          <Avatar alt="any" color="accent" variant="soft">
+            <Avatar.Image
+              alt="John Doe"
+              src="https://img.heroui.chat/image/avatar?w=400&h=400&u=3"
+            />
+            <Avatar.Fallback>JD</Avatar.Fallback>
+          </Avatar>
+        </View>
+
         <Slot />
       </HeroUINativeProvider>
     </AppThemeProvider>

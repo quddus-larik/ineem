@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import * as Haptics from 'expo-haptics';
-import { cn } from 'heroui-native';
+import { Button, cn } from 'heroui-native';
 import { type FC } from 'react';
 import { Platform, TouchableOpacity } from 'react-native';
 import Animated, { FadeOut, ZoomIn } from 'react-native-reanimated';

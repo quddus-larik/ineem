@@ -8,13 +8,12 @@ import {
 import { Button, Input, Label, Separator, TextField } from "heroui-native";
 import { useState } from "react";
 import { useAppTheme } from "../contexts/app-theme-context";
-import { Link } from "expo-router";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Link, useRouter } from "expo-router";
 import { Image } from "expo-image";
 
 export default function App() {
   const { isDark, toggleTheme, setTheme } = useAppTheme();
+  const router = useRouter();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -52,6 +51,7 @@ export default function App() {
                 <Input
                   value={form.firstName}
                   onChangeText={(v) => handleChange("firstName", v)}
+                  keyboardType="name-phone-pad"
                   placeholder="John"
                   returnKeyType="next"
                 />
@@ -62,6 +62,7 @@ export default function App() {
                   value={form.lastName}
                   onChangeText={(v) => handleChange("lastName", v)}
                   placeholder="Doe"
+                  keyboardType="name-phone-pad"
                   returnKeyType="next"
                 />
               </TextField>
@@ -86,7 +87,7 @@ export default function App() {
                 returnKeyType="done"
               />
             </TextField>
-            <Button className="w-full mt-4">
+            <Button className="w-full mt-4" onPress={()=> router.push("/home")}>
               <Button.Label>Create Account</Button.Label>
             </Button>
           </View>
