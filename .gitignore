@@ -37,3 +37,6 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example-src
+
+# heroui-agents-md
+.heroui-docs
