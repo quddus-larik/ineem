@@ -1,74 +1,179 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import {
   Avatar,
+  BottomSheet,
   Button,
   Chip,
-  Input,
-  Label,
+  InputGroup,
   ListGroup,
   PressableFeedback,
   Separator,
   Tabs,
-  TextField,
+  useBottomSheetAwareHandlers,
 } from "heroui-native";
-import { useState, Fragment } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useAppTheme } from "../../contexts/app-theme-context";
+import { Fragment, useMemo, useState } from "react";
+import { ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
-import { Link, useRouter } from "expo-router";
+import {
+  InvoiceGroup,
+  InvoiceItem,
+  InvoiceRowProps,
+  OVERDUE_DATA,
+  VIEWED_DATA,
+} from "@/config/data";
+import { router } from "expo-router";
 
-const OVERDUE_DATA = [
-  { id: "1", name: "Akram", fallback: "AK", invoice: "#100024", amount: "$295", due: "Due 15 days ago" },
-  { id: "2", name: "Rehan", fallback: "RH", invoice: "#100023", amount: "$290", due: "Due 15 days ago" },
-  { id: "3", name: "Sara", fallback: "SA", invoice: "#100022", amount: "$150", due: "Due 20 days ago" },
-];
+export const InvoiceRow = ({
+  item,
+  onPress,
+  showDivider = false,
+}: InvoiceRowProps) => (
+  <Fragment>
+    <PressableFeedback onPress={onPress}>
+      <PressableFeedback.Ripple />
+      <ListGroup.Item disabled>
+        <ListGroup.ItemPrefix>
+          <Avatar alt={item.name} size="sm" variant="soft">
+            <Avatar.Fallback>{item.fallback}</Avatar.Fallback>
+          </Avatar>
+        </ListGroup.ItemPrefix>
+        <ListGroup.ItemContent className="flex flex-row items-center justify-between">
+          <View>
+            <ListGroup.ItemTitle>{item.name}</ListGroup.ItemTitle>
+            <ListGroup.ItemDescription>
+              invoice {item.invoice}
+            </ListGroup.ItemDescription>
+          </View>
+          <View>
+            <ListGroup.ItemTitle className="text-right">
+              {item.amount}
+            </ListGroup.ItemTitle>
+            <ListGroup.ItemDescription className="text-right">
+              {item.due}
+            </ListGroup.ItemDescription>
+          </View>
+        </ListGroup.ItemContent>
+      </ListGroup.Item>
+    </PressableFeedback>
+    {showDivider && <Separator className="mx-4" />}
+  </Fragment>
+);
 
-const VIEWED_DATA = [
-  { id: "1", name: "Akram", fallback: "AK", invoice: "#100024", amount: "$295", due: "Due 15 days ago" },
-  { id: "2", name: "Rehan", fallback: "RH", invoice: "#100023", amount: "$290", due: "Due 15 days ago" },
-  { id: "3", name: "Ali", fallback: "AL", invoice: "#100021", amount: "$420", due: "Due in 2 days" },
-  { id: "4", name: "Zain", fallback: "ZN", invoice: "#100020", amount: "$110", due: "Due in 5 days" },
-  { id: "5", name: "Sana", fallback: "SN", invoice: "#100019", amount: "$350", due: "Due in 6 days" },
-  { id: "6", name: "Umer", fallback: "UM", invoice: "#100018", amount: "$95", due: "Due in 7 days" },
-  { id: "7", name: "Hamza", fallback: "HZ", invoice: "#100017", amount: "$ Rail", due: "Due in 12 days" },
-  { id: "8", name: "Bilal", fallback: "BL", invoice: "#100016", amount: "$210", due: "Due in 14 days" },
-];
+
+
+const InvoiceSection = ({ title, items }: any) => (
+  <View className="mb-4">
+    <View className="w-full mb-2 flex items-center justify-between flex-row">
+      <Text className="text-muted">{title.toUpperCase()}</Text>
+      <Chip>
+        <Chip.Label>{items.length} items</Chip.Label>
+      </Chip>
+    </View>
+    <ListGroup>
+      {items.map((item: any, index: any) => (
+        <InvoiceRow
+          key={`${title}-${item.id}`}
+          item={item}
+          onPress={() => router.push(`/invoices/${item.id}`)}
+          showDivider={index < items.length - 1}
+        />
+      ))}
+    </ListGroup>
+  </View>
+);
 
 export default function App() {
-  const { isDark, toggleTheme } = useAppTheme();
-  const router = useRouter();
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-  });
   const [activeTab, setActiveTab] = useState("unpaid");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { onFocus, onBlur } = useBottomSheetAwareHandlers();
 
-  const handleChange = (name: string, value: string) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    const filterItems = (items: InvoiceItem[]) => {
+      if (!query) {
+        return items;
+      }
+
+      return items.filter((item) =>
+        [item.name, item.invoice, item.amount, item.due]
+          .join(" ")
+          .toLowerCase()
+          .includes(query),
+      );
+    };
+
+    return {
+      overdue: filterItems(OVERDUE_DATA),
+      viewed: filterItems(VIEWED_DATA),
+    };
+  }, [searchQuery]);
+
+  const hasSearchResults =
+    searchResults.overdue.length > 0 || searchResults.viewed.length > 0;
 
   return (
     <View className="bg-background h-full flex-1 relative">
       <ScrollView className="px-4 py-2 h-full">
         <View className="flex items-center justify-between flex-row w-full mb-3">
           <Text className="text-4xl text-background-inverse">Invoices</Text>
-          <Button isIconOnly variant="tertiary">
-            <Image
-              source={{
-                uri: "https://unpkg.com/@mynaui/icons/icons/search.svg",
-              }}
-              style={{ height: 24, width: 24 }}
-              alt="logo-back"
-            />
-          </Button>
+          <BottomSheet isOpen={isSearchOpen} onOpenChange={setIsSearchOpen}>
+            <BottomSheet.Trigger asChild>
+              <Button isIconOnly variant="tertiary" isDisabled={isSearchOpen}>
+                <Image
+                  source={{
+                    uri: "https://unpkg.com/@mynaui/icons/icons/search.svg",
+                  }}
+                  style={{ height: 24, width: 24 }}
+                  alt="logo-back"
+                />
+              </Button>
+            </BottomSheet.Trigger>
+            <BottomSheet.Portal>
+              <BottomSheet.Overlay />
+              <BottomSheet.Content
+                snapPoints={["75%"]}
+                handleComponent={() => null}
+                contentContainerClassName="h-full px-0 pt-2"
+                keyboardBehavior="fillParent"
+              >
+                <View className="px-5 my-3">
+                  <InputGroup>
+                    <InputGroup.Prefix>
+                      <Image
+                        source={{
+                          uri: "https://unpkg.com/@mynaui/icons/icons/search.svg",
+                        }}
+                        style={{ height: 20, width: 20 }}
+                        alt="search-icon"
+                      />
+                    </InputGroup.Prefix>
+                    <InputGroup.Input
+                      onChangeText={setSearchQuery}
+                      onFocus={onFocus}
+                      onBlur={onBlur}
+                      placeholder="Search invoice data"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="search"
+                    />
+                  </InputGroup>
+                </View>
+                <BottomSheetScrollView
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerClassName="px-4 pb-safe-offset-8"
+                >
+                  <View className="items-center justify-center py-12 px-6">
+                    <Text className="text-muted text-center">
+                      No invoices match
+                    </Text>
+                  </View>
+                </BottomSheetScrollView>
+              </BottomSheet.Content>
+            </BottomSheet.Portal>
+          </BottomSheet>
         </View>
 
         <Tabs
@@ -87,89 +192,8 @@ export default function App() {
           </Tabs.List>
         </Tabs>
 
-        <View className="w-full mb-2 flex items-center justify-between flex-row">
-          <Text className="text-muted">OVERDUE</Text>
-          <Chip>
-            <Chip.Label>{OVERDUE_DATA.length} items</Chip.Label>
-          </Chip>
-        </View>
-        <ListGroup className="mb-4">
-          {OVERDUE_DATA.map((item, index) => (
-            <Fragment key={item.id}>
-              <PressableFeedback 
-                onPress={() => console.log(`Pressed overdue item ${item.id}`)}
-              >
-                <PressableFeedback.Ripple />
-                <ListGroup.Item disabled>
-                  <ListGroup.ItemPrefix>
-                    <Avatar alt="AM" size="sm" variant="soft">
-                      <Avatar.Fallback>{item.fallback}</Avatar.Fallback>
-                    </Avatar>
-                  </ListGroup.ItemPrefix>
-                  <ListGroup.ItemContent className="flex flex-row items-center justify-between">
-                    <View>
-                      <ListGroup.ItemTitle>{item.name}</ListGroup.ItemTitle>
-                      <ListGroup.ItemDescription>
-                        invoice {item.invoice}
-                      </ListGroup.ItemDescription>
-                    </View>
-                    <View>
-                      <ListGroup.ItemTitle className="text-right">
-                        {item.amount}
-                      </ListGroup.ItemTitle>
-                      <ListGroup.ItemDescription className="text-right">
-                        {item.due}
-                      </ListGroup.ItemDescription>
-                    </View>
-                  </ListGroup.ItemContent>
-                </ListGroup.Item>
-              </PressableFeedback>
-              {index < OVERDUE_DATA.length - 1 && <Separator className="mx-4" />}
-            </Fragment>
-          ))}
-        </ListGroup>
-
-        <View className="w-full mb-2 flex items-center justify-between flex-row">
-          <Text className="text-muted">VIEWED</Text>
-          <Chip>
-            <Chip.Label>{VIEWED_DATA.length} items</Chip.Label>
-          </Chip>
-        </View>
-        <ListGroup className="mb-6">
-          {VIEWED_DATA.map((item, index) => (
-            <Fragment key={item.id}>
-              <PressableFeedback 
-                onPress={() => console.log(`Pressed viewed item ${item.id}`)}
-              >
-                <PressableFeedback.Ripple />
-                <ListGroup.Item disabled>
-                  <ListGroup.ItemPrefix>
-                    <Avatar alt="AM" size="sm" variant="soft">
-                      <Avatar.Fallback>{item.fallback}</Avatar.Fallback>
-                    </Avatar>
-                  </ListGroup.ItemPrefix>
-                  <ListGroup.ItemContent className="flex flex-row items-center justify-between">
-                    <View>
-                      <ListGroup.ItemTitle>{item.name}</ListGroup.ItemTitle>
-                      <ListGroup.ItemDescription>
-                        invoice {item.invoice}
-                      </ListGroup.ItemDescription>
-                    </View>
-                    <View>
-                      <ListGroup.ItemTitle className="text-right">
-                        {item.amount}
-                      </ListGroup.ItemTitle>
-                      <ListGroup.ItemDescription className="text-right">
-                        {item.due}
-                      </ListGroup.ItemDescription>
-                    </View>
-                  </ListGroup.ItemContent>
-                </ListGroup.Item>
-              </PressableFeedback>
-              {index < VIEWED_DATA.length - 1 && <Separator className="mx-4" />}
-            </Fragment>
-          ))}
-        </ListGroup>
+        <InvoiceSection title="Overdue" items={OVERDUE_DATA} />
+        <InvoiceSection title="Viewed" items={VIEWED_DATA} />
         <View className="w-full h-24" />
       </ScrollView>
 
