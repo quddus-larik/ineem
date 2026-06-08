@@ -10,9 +10,11 @@ import { useState } from "react";
 import { useAppTheme } from "../contexts/app-theme-context";
 import { Link, useRouter } from "expo-router";
 import { Image } from "expo-image";
+import { useIcons } from "@/assets/icons/main";
 
 export default function App() {
   const { isDark, toggleTheme, setTheme } = useAppTheme();
+  const { GoogleIcon, GithubIcon, DiscordIcon, AppleIcon, FacebookIcon } = useIcons();
   const router = useRouter();
   const [form, setForm] = useState({
     firstName: "",
@@ -110,12 +112,7 @@ export default function App() {
         </View>
         <View className="w-full flex-row gap-2 p-4 justify-between">
           <Button variant="secondary" isIconOnly size="lg" onPress={()=> setTheme("lavender-light")}>
-            <Image
-              source={{
-                uri: "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/google/color.svg",
-              }}
-              style={{ width: 24, height: 24 }}
-            />
+            <GoogleIcon />
           </Button>
           <Button
             variant="secondary"
@@ -123,12 +120,7 @@ export default function App() {
             isIconOnly
             size="lg"
           >
-            <Image
-              source={{
-                uri: "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/facebook/default.svg",
-              }}
-              style={{ width: 24, height: 24 }}
-            />
+            <FacebookIcon />
           </Button>
           <Button
             variant="secondary"
@@ -136,12 +128,7 @@ export default function App() {
             isIconOnly
             size="lg"
           >
-            <Image
-              source={{
-                uri: "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/github/default.svg",
-              }}
-              style={{ width: 24, height: 24 }}
-            />
+            <GithubIcon />
           </Button>
           <Button
             variant="secondary"
@@ -149,12 +136,7 @@ export default function App() {
             isIconOnly
             size="lg"
           >
-            <Image
-              source={{
-                uri: "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/discord/default.svg",
-              }}
-              style={{ width: 24, height: 24 }}
-            />
+            <DiscordIcon />
           </Button>
           <Button
             variant="secondary"
@@ -162,12 +144,7 @@ export default function App() {
             isIconOnly
             size="lg"
           >
-            <Image
-              source={{
-                uri: "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/apple/mono.svg",
-              }}
-              style={{ width: 24, height: 24 }}
-            />
+            <AppleIcon />
           </Button>
         </View>
       </ScrollView>

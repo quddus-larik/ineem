@@ -10,8 +10,10 @@ import {
 import { useAppTheme } from "../contexts/app-theme-context";
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
+import { useIcons } from "@/assets/icons/main";
 
 export default function App() {
+  const { GoogleIcon, GithubIcon, DiscordIcon, AppleIcon, FacebookIcon } = useIcons();
   const router = useRouter();
   const { isDark, toggleTheme } = useAppTheme();
   const [form, setForm] = useState({
@@ -28,14 +30,15 @@ export default function App() {
       style={{ flex: 1, flexDirection: "column" }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      
       <ScrollView
         className="flex-1 bg-background pt-20"
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 w-full">
           <View className="h-1/3 flex items-center justify-center p-4">
-            <Text className="text-3xl font-sans mb-2 text-background-inverse">Login</Text>
+            <Text className="text-3xl font-sans mb-2 text-background-inverse">
+              Login
+            </Text>
             <Text className="text-sm font-sans">
               <Text className="text-background-inverse">Not a member?</Text>
               <Link href={"/register"}>
@@ -64,7 +67,10 @@ export default function App() {
                 returnKeyType="done"
               />
             </TextField>
-            <Button className="w-full mt-4" onPress={()=> router.push("/home")}>
+            <Button
+              className="w-full mt-4"
+              onPress={() => router.push("/home")}
+            >
               <Button.Label>LogIn</Button.Label>
             </Button>
           </View>
@@ -87,12 +93,7 @@ export default function App() {
         </View>
         <View className="w-full flex-row gap-2 p-4 justify-between">
           <Button variant="secondary" isIconOnly size="lg">
-            <Image
-              source={{
-                uri: "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/google/color.svg",
-              }}
-              style={{ width: 24, height: 24 }}
-            />
+            <GoogleIcon />
           </Button>
           <Button
             variant="secondary"
@@ -100,12 +101,7 @@ export default function App() {
             isIconOnly
             size="lg"
           >
-            <Image
-              source={{
-                uri: "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/facebook/default.svg",
-              }}
-              style={{ width: 24, height: 24 }}
-            />
+            <FacebookIcon />
           </Button>
           <Button
             variant="secondary"
@@ -113,12 +109,7 @@ export default function App() {
             isIconOnly
             size="lg"
           >
-            <Image
-              source={{
-                uri: "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/github/default.svg",
-              }}
-              style={{ width: 24, height: 24 }}
-            />
+            <GithubIcon />
           </Button>
           <Button
             variant="secondary"
@@ -126,12 +117,7 @@ export default function App() {
             isIconOnly
             size="lg"
           >
-            <Image
-              source={{
-                uri: "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/discord/default.svg",
-              }}
-              style={{ width: 24, height: 24 }}
-            />
+            <DiscordIcon />
           </Button>
           <Button
             variant="secondary"
@@ -139,12 +125,7 @@ export default function App() {
             isIconOnly
             size="lg"
           >
-            <Image
-              source={{
-                uri: "https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/apple/mono.svg",
-              }}
-              style={{ width: 24, height: 24 }}
-            />
+            <AppleIcon />
           </Button>
         </View>
       </ScrollView>
