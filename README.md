@@ -2,7 +2,8 @@
 
 This is an [Expo](https://expo.dev) project preconfigured with
 [HeroUI Native](https://heroui.com/docs/native), [Uniwind](https://docs.uniwind.dev)
-(Tailwind CSS for React Native), and [Expo Router](https://docs.expo.dev/router/introduction).
+(Tailwind CSS for React Native), and [Expo Router](https://docs.expo.dev/router/introduction)
+with a bottom-tab layout.
 
 ## Get started
 
@@ -25,7 +26,7 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+You can start developing by editing the files inside the **src/app** directory. The tabs themselves live under `src/app/(tabs)/`. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
 ## What's preconfigured
 
@@ -33,6 +34,7 @@ You can start developing by editing the files inside the **src/app** directory. 
 - **Uniwind** + **Tailwind CSS** wired through `metro.config.js` and `src/global.css`
 - All HeroUI Native mandatory peer dependencies: `react-native-reanimated`, `react-native-gesture-handler`, `react-native-worklets`, `react-native-safe-area-context`, `react-native-svg`, `react-native-screens`
 - `@gorhom/bottom-sheet` for bottom-sheet UIs
+- `@expo/vector-icons` (Ionicons) for tab bar icons
 - TypeScript with `strict: true` and `@/*` path alias to `./src/*`
 - React Compiler enabled
 

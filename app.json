@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "my-heroui-native-app",
-    "slug": "my-heroui-native-app",
+    "name": "policy-pilot",
+    "slug": "policy-pilot",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,6 +19,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-font",
       [
         "expo-splash-screen",
         {
