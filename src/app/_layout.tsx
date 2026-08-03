@@ -1,130 +1,16 @@
-import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  useFonts,
-} from "@expo-google-fonts/inter";
-import {
-  Saira_400Regular,
-  Saira_500Medium,
-  Saira_600SemiBold,
-  Saira_700Bold,
-} from "@expo-google-fonts/saira";
-import {
-  SNPro_400Regular,
-  SNPro_500Medium,
-  SNPro_600SemiBold,
-  SNPro_700Bold,
-} from "@expo-google-fonts/sn-pro";
-import {
-  SpaceGrotesk_400Regular,
-  SpaceGrotesk_500Medium,
-  SpaceGrotesk_600SemiBold,
-  SpaceGrotesk_700Bold,
-} from "@expo-google-fonts/space-grotesk";
-import { Slot, Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
+import { Stack } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
-import { useCallback } from "react";
-import { StatusBar, StyleSheet } from "react-native";
+import type { JSX } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import {
-  KeyboardAvoidingView,
-  KeyboardProvider,
-} from "react-native-keyboard-controller";
-import "../../global.css";
-import { AppThemeProvider } from "../contexts/app-theme-context";
-import { useAppTheme } from "../contexts/app-theme-context";
-import { useUniwind } from "uniwind";
 
-SplashScreen.setOptions({
-  duration: 300,
-  fade: true,
-});
+import "../global.css";
 
-/**
- * Component that wraps app content inside KeyboardProvider
- * Contains the contentWrapper and HeroUINativeProvider configuration
- */
-function AppContent() {
-  const { theme } = useUniwind();
-  const contentWrapper = useCallback(
-    (children: React.ReactNode) => (
-      <KeyboardAvoidingView
-        pointerEvents="box-none"
-        behavior="padding"
-        keyboardVerticalOffset={12}
-        className="flex-1"
-      >
-        {children}
-      </KeyboardAvoidingView>
-    ),
-    [],
-  );
-
+export default function RootLayout(): JSX.Element {
   return (
-    <AppThemeProvider>
-      <HeroUINativeProvider
-        config={{
-          textProps: {
-            maxFontSizeMultiplier: 2,
-          },
-          toast: {
-            contentWrapper,
-          },
-          devInfo: {
-            stylingPrinciples: false,
-          },
-        }}
-      >
-        {/* Fixed: dark theme = light icons on black, light theme = dark icons on white */}
-        {theme === "dark" ? (
-          <StatusBar barStyle="light-content" backgroundColor="#000000" />
-        ) : (
-          <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-        )}
-        <Slot />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <HeroUINativeProvider>
+        <Stack screenOptions={{ headerShown: false }} />
       </HeroUINativeProvider>
-    </AppThemeProvider>
-  );
-}
-
-export default function Layout() {
-  const fonts = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    SpaceGrotesk_400Regular,
-    SpaceGrotesk_500Medium,
-    SpaceGrotesk_600SemiBold,
-    SpaceGrotesk_700Bold,
-    Saira_400Regular,
-    Saira_500Medium,
-    Saira_600SemiBold,
-    Saira_700Bold,
-    SNPro_400Regular,
-    SNPro_500Medium,
-    SNPro_600SemiBold,
-    SNPro_700Bold,
-  });
-
-  if (!fonts) {
-    return null;
-  }
-
-  return (
-    <GestureHandlerRootView style={styles.root}>
-      <KeyboardProvider>
-        <AppContent />
-      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-});
