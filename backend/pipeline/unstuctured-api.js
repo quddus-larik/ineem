@@ -1,26 +1,16 @@
-import { UnstructuredClient } from "unstructured-client";
-import { Strategy } from "unstructured-client/sdk/models/shared";
-import * as fs from "fs";
-import "dotenv/config";
+import PDFParser from "pdf2json";
 
-const client = new UnstructuredClient({
-  security: {
-    apiKeyAuth: process.env.UNSTRUCTURED_API_KEY,
-  },
-});
+export async function extractPdfText(filePath) {
+  return new Promise((resolve, reject) => {
+    const pdfParser = new PDFParser(null, true); // true = extract text only (fast mode)
 
-async function parseContract(filePath) {
-  const fileData = fs.readFileSync(filePath);
+    pdfParser.on("pdfParser_dataError", (errData) => reject(errData.parserError));
+    pdfParser.on("pdfParser_dataReady", () => {
+      // Stream raw text directly without constructing complex layout trees
+      const rawText = pdfParser.getRawTextContent();
+      resolve(rawText);
+    });
 
-  const response = await client.general.partition({
-    partitionParameters: {
-      files: {
-        content: fileData,
-        fileName: filePath,
-      },
-      strategy: Strategy.Auto,
-    },
+    pdfParser.loadPDF(filePath);
   });
-
-  return response.elements;
 }
