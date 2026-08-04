@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ineem",
-    "slug": "ineem",
+    "name": "native",
+    "slug": "native",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
