@@ -21,13 +21,17 @@ const demoImages = [
 
 export default function HomeScreen(): JSX.Element {
   return (
-    <View className="flex-1 bg-background flex flex-col pt-8">
-      <View className="flex flex-col gap-1 justify-center items-center h-32">
+    <View className="flex-1 bg-background flex flex-col pt-8 px-2">
+      <View className="flex flex-col gap-1 justify-center items-center h-44">
         <Typography.Heading type="h2">Files</Typography.Heading>
         <Typography.Paragraph>Total {demoImages.length} files</Typography.Paragraph>
       </View>
-      <View className="flex flex-col px-4 gap-4">
-        <View className="flex flex-row flex-wrap gap-4">
+      <View className="flex flex-row justify-between items-center py-3">
+        <Button size="sm">Menu</Button>
+        <Button size="sm">Search</Button>
+      </View>
+      <View className="flex flex-col px-0 gap-2">
+        <View className="flex flex-row flex-wrap gap-2">
           {demoImages.map((src, index) => (
             <PressableFeedback
               key={index}
