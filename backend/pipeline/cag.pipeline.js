@@ -4,7 +4,7 @@ import {
   SystemMessage,
   HumanMessage,
   BaseMessage,
-} from "@langchain/core/message";
+} from "@langchain/core/messages";
 
 const LLM = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY,
@@ -36,6 +36,9 @@ async function callModelNode(state) {
   }
 }
 
-const workflow = new StateGraph(GraphState).addNode("agent", callModelNode).addNode(START,"agent").addEdge("agent", END);
+const workflow = new StateGraph(GraphState)
+  .addNode("agent", callModelNode)
+  .addEdge(START, "agent")
+  .addEdge("agent", END);
 
 export const CAGProcess = workflow.compile();
