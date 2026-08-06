@@ -1,4 +1,4 @@
-import { ingestStorageDocument, askQuestion } from "../services/ragService.js";
+import { ingestStorageDocument, askQuestion } from "../pipeline/rag.js";
 
 // Ingest the file from the user given data
 export async function handleIngestPolicy(req, res) {
@@ -53,7 +53,7 @@ Target Contract text to audit:
 "${contractText}"
 `;
 
-    // Query your RAG service
+  
     const ragResult = await askQuestion(auditPrompt, userId);
 
     return res.status(200).json({

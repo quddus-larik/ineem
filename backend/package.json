@@ -21,6 +21,8 @@
     "langchain": "^1.5.4",
     "multer": "^2.2.0",
     "nodemon": "^3.1.14",
+    "pdf-img-convert": "^2.0.0",
+    "tesseract.js": "^7.0.0",
     "unstructured-client": "^0.31.0",
     "zod": "^4.4.3"
   }

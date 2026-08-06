@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { handleIngestPolicy, handleAuditPolicy } from "../controllers/policyController.js";
+import { handleIngestPolicy, handleAuditPolicy } from "../controller/policyController.js";
 
 const router = Router();
 

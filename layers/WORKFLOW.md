@@ -34,5 +34,3 @@
 * **`express` + `cors**` — Node.js / TypeScript REST API framework.
 * **`@supabase/supabase-js`** — Auth middleware, user token validation, and storage file bucket management.
 * **`expo` + `expo-router**` — Mobile client navigation and view layer.
-
-app
