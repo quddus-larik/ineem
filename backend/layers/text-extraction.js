@@ -1,25 +1,17 @@
-import pdfImg from 'pdf-img-convert';
-import { createWorker } from 'tesseract.js';
+import { PDFParse } from "pdf-parse";
+import { TurnIntoTRON } from "./json-tron.js";
 
-export async function extractPdfTextWithOcr(filePath) {
-  const pages = await pdfImg.convert(filePath, { scale: 2.0 });
-  const worker = await createWorker('eng');
+export async function processPdfExtraction() {
+  const pdfUrl = "https://hijwuidftauwnhksgxfr.supabase.co/storage/v1/object/public/rag_documents/Resume.pdf";
+  const pdf2url = "https://bitcoin.org/bitcoin.pdf"
 
-  const pageTexts = [];
-  for (const pageBuffer of pages) {
-    const { data: { text } } = await worker.recognize(pageBuffer);
-    pageTexts.push(text);
-  }
+  // Pass a URL instance as the first argument
+  const parser = new PDFParse(new URL(pdf2url));
 
-  await worker.terminate();
+  // Await the asynchronous text extraction
+  const pdfText = await parser.getText();
 
-  return cleanTextForLLM(pageTexts.join('\n\n'));
-}
-
-function cleanTextForLLM(rawText) {
-  return rawText
-    .replace(/\r\n/g, '\n')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+  return {
+    data: pdfText
+  };
 }
