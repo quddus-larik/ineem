@@ -1,11 +1,9 @@
 import express from "express";
-import { PdfRoute } from "./routes/upload.route.js";
-import { policyRoute } from "./routes/policies.route.js";
+import { ParserRoute } from "./routes/parser.route.js";
 
 const app = express();
 
-app.use(express.json())
-app.use("/api/v1/pdf", PdfRoute);
-app.use("/api/v1/", policyRoute);
+app.use(express.json());
+app.use("/api/v1/pdf", ParserRoute);
 
 app.listen(3000);
