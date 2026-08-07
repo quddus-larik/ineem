@@ -47,10 +47,6 @@
       /* Border Radius */
       --radius: 0.5rem;
       --field-radius: 0.75rem;
-
-      /* Font Family */
-      /* Make sure to load Inter font in your app */
-      --font-sans: var(--font-inter);
     }
 
     @variant dark {
@@ -87,6 +83,10 @@
       --surface-tertiary-foreground: oklch(99.11% 0.0015 264.30);
       --warning: oklch(82.03% 0.1392 77.60);
       --warning-foreground: oklch(21.03% 0.0059 77.60);
+
+      /* Border Radius */
+      --radius: 0.5rem;
+      --field-radius: 0.75rem;
     }
   }
 }

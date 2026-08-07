@@ -12,7 +12,7 @@ import {
 } from "heroui-native";
 import { useState } from "react";
 import { useUniwind } from "uniwind";
-import { GoogleIcon, GithubIcon, XIcon } from "../../components/icons";
+import { GoogleIcon, GithubIcon, XIcon } from "../../../components/icons";
 
 export default function SignInInterface() {
   const { theme } = useUniwind();

@@ -2,23 +2,14 @@ import { Stack } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
 import type { JSX } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import "../global.css";
-import { useUniwind, Uniwind } from "uniwind";
-import { BottomMenu } from "../../components/layout/menu";
-import { StatusBar, View } from "react-native";
 
+import "../../global.css";
 
 export default function RootLayout(): JSX.Element {
-  const { theme } = useUniwind();
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <HeroUINativeProvider>
-        <View className={"bg-background-secondary h-8 w-full"} >
-        </View>
-
         <Stack screenOptions={{ headerShown: false }} />
-        <BottomMenu />
       </HeroUINativeProvider>
     </GestureHandlerRootView>
   );
