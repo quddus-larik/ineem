@@ -1,17 +1,17 @@
-import { PDFParse } from "pdf-parse";
-import { TurnIntoTRON } from "./json-tron.js";
+import pdfParse from "pdf-parse";
 
-export async function processPdfExtraction() {
-  const pdfUrl = "https://hijwuidftauwnhksgxfr.supabase.co/storage/v1/object/public/rag_documents/Resume.pdf";
-  const pdf2url = "https://bitcoin.org/bitcoin.pdf"
+// Accepts a Buffer (uploaded file) and returns { data: string }
+export async function processPdfExtraction(buffer) {
+  if (!buffer) {
+    throw new Error("No file buffer provided for extraction");
+  }
 
-  // Pass a URL instance as the first argument
-  const parser = new PDFParse(new URL(pdf2url));
-
-  // Await the asynchronous text extraction
-  const pdfText = await parser.getText();
+  // pdf-parse returns an object with text (full document) and numpages
+  const result = await pdfParse(buffer);
+  const text = result?.text || "";
 
   return {
-    data: pdfText
+    data: text,
+    meta: { numpages: result?.numpages ?? null },
   };
 }
