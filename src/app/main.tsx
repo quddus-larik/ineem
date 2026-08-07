@@ -11,7 +11,7 @@ import type { JSX } from "react";
 import { View, Image, Text, StyleSheet, ScrollView } from "react-native";
 
 const demoImages = [
-  "https://i0.wp.com/everyday.codes/wp-content/uploads/2019/06/react-native-1024x631-1024x631.png?resize=680%2C419&ssl=1",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjJH30YZGZ-EM0CbzRSQVfwCiTlaEqfGKYA8Nf7JZ80XKfRvl4n3hYgGUJ&s=10",
   "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400",
   "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400",
   "https://images.unsplash.com/photo-1477346611705-65d1883cee1e?w=400",
@@ -22,7 +22,10 @@ const demoImages = [
 export default function HomeScreen(): JSX.Element {
   return (
     <View className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingTop: 32, paddingHorizontal: 8, paddingBottom: 140 }} className="flex-1">
+      <ScrollView
+        contentContainerStyle={{ paddingTop: 32, paddingHorizontal: 8, paddingBottom: 140 }}
+        className="flex-1"
+      >
         <View className="flex flex-col gap-1 justify-center items-center h-44">
           <Typography.Heading type="h2">Files</Typography.Heading>
           <Typography.Paragraph>Total {demoImages.length} files</Typography.Paragraph>
@@ -34,29 +37,27 @@ export default function HomeScreen(): JSX.Element {
         <View className="flex flex-col px-0 gap-2">
           <View className="flex flex-row flex-wrap gap-2">
             {demoImages.map((src, index) => (
-              <PressableFeedback
-                key={index}
-                className="flex-[1_1_45%] min-w-[150px]"
-              >
-                <Card className="aspect-square w-full rounded-xl">
-                  <Image
-                    source={{
-                      uri: "https://heroui-assets.nyc3.cdn.digitaloceanspaces.com/docs/neo2.jpeg",
-                    }}
-                    style={StyleSheet.absoluteFill}
-                    resizeMode="cover"
-                  />
-                  <PressableFeedback.Ripple
-                    animation={{
-                      backgroundColor: { value: "white" },
-                      opacity: { value: [0, 0.3, 0] },
-                    }}
-                  />
-                </Card>
-                <View className="flex flex-col">
-                  <Label>Resume.pdf</Label>
-                  <Description>23 March, 2026</Description>
-                </View>
+              <PressableFeedback key={index} className="flex-[1_1_45%] min-w-[150px]">
+                <Surface className={"p-0 rounded-xl"}>
+                  <Card className="aspect-square w-full rounded-xl">
+                    <Image
+                      source={{
+                        uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjJH30YZGZ-EM0CbzRSQVfwCiTlaEqfGKYA8Nf7JZ80XKfRvl4n3hYgGUJ&s=10",
+                      }}
+                      style={StyleSheet.absoluteFill}
+                      resizeMode="cover"
+                    />
+                    <PressableFeedback.Ripple
+                      animation={{
+                        backgroundColor: { value: "white" },
+                        opacity: { value: [0, 0.3, 0] },
+                      }}
+                    />
+                  </Card>
+                  <View className="flex flex-col px-2 py-1">
+                    <Label>Resume.pdf</Label>
+                  </View>
+                </Surface>
               </PressableFeedback>
             ))}
           </View>
