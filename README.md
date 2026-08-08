@@ -1,44 +1,36 @@
-# Welcome to your HeroUI Native app 👋
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-This is an [Expo](https://expo.dev) project preconfigured with
-[HeroUI Native](https://heroui.com/docs/native), [Uniwind](https://docs.uniwind.dev)
-(Tailwind CSS for React Native), and [Expo Router](https://docs.expo.dev/router/introduction).
+## Getting Started
 
-## Get started
+First, run the development server:
 
-1. Install dependencies
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-   ```bash
-   npm install
-   ```
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-2. Start the app
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-   ```bash
-   npx expo start
-   ```
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-In the output, you'll find options to open the app in a
+## Learn More
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+To learn more about Next.js, take a look at the following resources:
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## What's preconfigured
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-- **HeroUI Native** (`heroui-native`) wrapped in `HeroUINativeProvider` and `GestureHandlerRootView` in `src/app/_layout.tsx`
-- **Uniwind** + **Tailwind CSS** wired through `metro.config.js` and `src/global.css`
-- All HeroUI Native mandatory peer dependencies: `react-native-reanimated`, `react-native-gesture-handler`, `react-native-worklets`, `react-native-safe-area-context`, `react-native-svg`, `react-native-screens`
-- `@gorhom/bottom-sheet` for bottom-sheet UIs
-- TypeScript with `strict: true` and `@/*` path alias to `./src/*`
-- React Compiler enabled
+## Deploy on Vercel
 
-## Learn more
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-- [HeroUI Native components](https://heroui.com/docs/native) — full component reference
-- [Expo documentation](https://docs.expo.dev/) — Expo fundamentals and guides
-- [Uniwind documentation](https://docs.uniwind.dev) — Tailwind for React Native
-- [Expo Router](https://docs.expo.dev/router/introduction) — file-based routing
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
