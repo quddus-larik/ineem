@@ -2,7 +2,6 @@ import { Avatar, Button, Drawer, Label, ListBox, Tooltip } from "@heroui/react";
 import { DollarSign, LogOut, Sidebar } from "lucide-react";
 import Link from "next/link";
 import { InstituteSelector } from "../institute/institute-selector";
-import { useInstituteStore } from "@/stores/institutes.store";
 import { getMenuItems } from "@/config/data";
 import { FooterSidebar } from "@/components/custom/footer-sidebar";
 import { ThemeSwitch } from "@/components/custom/switch.theme";

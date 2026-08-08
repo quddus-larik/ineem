@@ -17,6 +17,9 @@ importers:
       '@heroui/styles':
         specifier: ^3.2.4
         version: 3.2.4(tailwind-merge@3.4.0)(tailwindcss@4.3.3)
+      '@mynaui/icons-react':
+        specifier: ^0.4.11
+        version: 0.4.11(react@19.2.8)
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -26,6 +29,9 @@ importers:
       '@thesvg/react':
         specifier: ^3.2.19
         version: 3.2.19(react@19.2.8)
+      lucide-react:
+        specifier: ^1.30.0
+        version: 1.30.0(react@19.2.8)
       next:
         specifier: 16.3.0
         version: 16.3.0(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -472,6 +478,11 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@mynaui/icons-react@0.4.11':
+    resolution: {integrity: sha512-vKAAUuT6C39nrYQP3QStMyDI/kwDruk86Y7h1u3pzxqrKZKzkRjXCntX83LfupaiXpEjBCiloQZBLz2z1zqV4A==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   '@napi-rs/wasm-runtime@1.2.2':
     resolution: {integrity: sha512-JfB4kuJQjaoHuCTseIINHtHWeJnvgEcxjwA5t/Y00ZgaOO1Crz3fjT/p8kT28zA/Caz7oiUMn3d6H2yOVCVwuw==}
@@ -1877,6 +1888,11 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
+  lucide-react@1.30.0:
+    resolution: {integrity: sha512-tUIr2jXLbWpCkdtH8XP7P7YppM9ueWgTky99lpWDY6z5REs6B+O6ZQ3U5tHkUUY59ANyOv/PBcs8E4Fe3KO3eA==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -2825,6 +2841,11 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@mynaui/icons-react@0.4.11(react@19.2.8)':
+    dependencies:
+      prop-types: 15.8.1
+      react: 19.2.8
 
   '@napi-rs/wasm-runtime@1.2.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
@@ -4309,6 +4330,10 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lucide-react@1.30.0(react@19.2.8):
+    dependencies:
+      react: 19.2.8
 
   magic-string@0.30.21:
     dependencies:

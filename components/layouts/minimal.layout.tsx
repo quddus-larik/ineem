@@ -9,7 +9,6 @@ import type { ReactNode } from "react";
 import { NotificationButton } from "../custom/notification.minor";
 import { ThemeSwitch } from "../custom/switch.theme";
 import { InstituteSelector } from "../pages/institute/institute-selector";
-import { useInstituteStore } from "@/stores/institutes.store";
 import { MobileSidebar } from "../pages/main/mobile-sidebar";
 import { getMenuItems } from "@/config/data";
 import { FooterSidebar } from "../custom/footer-sidebar";
@@ -23,12 +22,11 @@ interface LUIProps {
 }
 
 export function MinimaDashboard({ children }: LUIProps) {
-  const { selectedInstituteSlug } = useInstituteStore();
+
   const pathname: string = usePathname();
   const router = useRouter();
-  const selected = selectedInstituteSlug();
 
-  const icons = getMenuItems(selected);
+  const icons = getMenuItems("/dashboard");
 
   return (
     <div className="w-full min-h-screen flex bg-background-secondary dark:bg-background-inverse/2">
@@ -76,11 +74,11 @@ export function MinimaDashboard({ children }: LUIProps) {
       <main className="flex-1 min-w-0 p-5 bg-background m-1 lg:m-3 rounded-3xl shadow-sm lg:ml-[92px] space-y-3">
         <div className="w-full flex justify-between items-center h-10">
           <div className="flex gap-2 items-center justify-start">
-            <MobileSidebar />
+            {/*<MobileSidebar />*/}
             <BreadcrumbsMinor />
           </div>
           <div className="items-center justify-between gap-2 hidden lg:flex">
-            <InstituteSelector />
+            {/*<InstituteSelector />*/}
             <Button
               onClick={() => router.push(`/institutes/${selected}/schedule`)}
               isIconOnly
