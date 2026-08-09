@@ -31,11 +31,11 @@ export function getMenuItems(selected?: string | null) {
         : "/institutes";
 
     return [
-        {icon: Mail, title: "Mails", url: attendanceUrl},
-        {icon: ChatMessages, title: "Assistance", url: subjectsUrl},
-        {icon: AsteriskOctagon, title: "Automation", url: instituteUrl},
-        {icon: CheckSquareOne, title: "Tasks", url: classesUrl},
-        {icon: UsersGroup, title: "Contacts", url: studentsUrl},
+        {icon: Mail, title: "Mails", url: "/emails"},
+        {icon: ChatMessages, title: "Assistance", url: "/assistant"},
+        {icon: AsteriskOctagon, title: "Automation", url: "/automations"},
+        {icon: CheckSquareOne, title: "Tasks", url: "/tasks"},
+        {icon: UsersGroup, title: "Contacts", url: "/contacts"},
         // {icon: Ticket, title: "Expenses", url: expensesUrl},
     ];
 }

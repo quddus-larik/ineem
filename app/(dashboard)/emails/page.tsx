@@ -24,6 +24,25 @@ export default function Page() {
     }, []);
     console.log("emails", emails);
 
+    async function getGravatarUrl(email: string): string {
+        const cleanEmail = email.trim().toLowerCase();
+
+        // Hash email with MD5
+        const encoder = new TextEncoder();
+        const data = encoder.encode(cleanEmail);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data); // or MD5
+
+        // Alternatively, use a lightweight md5 library or fallback:
+        // const hash = md5(cleanEmail);
+
+        // Fallback image parameter 'd' generates initials if email isn't registered
+        const fallbackUrl = encodeURIComponent(
+            `https://ui-avatars.com/api/${getSenderName(cleanEmail)}/128/7c3aed/ffffff`
+        );
+
+        return `https://www.gravatar.com/avatar/${hash}?d=${fallbackUrl}`;
+    }
+
     function formatDate(dateString?: string): string {
         if (!dateString) return "";
 
@@ -77,11 +96,12 @@ export default function Page() {
                         <Surface
                             key={email.id}
                             onClick={() => setViewMail(email.id)}
-                            className={`w-full rounded-xl p-1 flex gap-1 shrink-0 cursor-pointer ${
+                            className={`w-full rounded-xl p-1 flex gap-1 shrink-0 cursor-pointer transition-colors ${
                                 selectedEmailId === email.id ? "bg-accent-soft/50" : ""
                             }`}
                         >
                             <Avatar size={"sm"} variant={"soft"} color={"accent"}>
+                                {/*<Avatar.Image src={getGravatarUrl(getCleanEmail(email.from))} />*/}
                                 <Avatar.Fallback>
                                     {(email.from || email.sender)?.[0] || "AE"}
                                 </Avatar.Fallback>
