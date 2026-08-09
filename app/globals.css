@@ -1,7 +1,61 @@
+@font-face {
+  font-family: "Stack Sans Notch";
+  src: url("/StackSansNotch-VariableFont_wght.ttf") format("truetype");
+  font-weight: 200 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/PlusJakartaSans-VariableFont_wght.ttf") format("truetype");
+  font-weight: 200 700;
+  font-display: swap;
+}
+
+@layer theme, base, components, utilities;
 @import "tailwindcss";
 @import "@heroui/styles";
 
+@custom-variant dark (&:is(.dark *));
 
+@utility font-stack-sans-notch {
+  font-family: "Stack Sans Notch", sans-serif;
+}
+
+@utility font-plus-jakarta {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+body {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+/* Text selection */
+::selection {
+  background: #9bb1ff;
+  color: oklch(23% 0.03 250);
+  text-shadow: 0 0 0 transparent;
+}
+
+::-moz-selection {
+  background: #9bb1ff;
+  color: oklch(23% 0.03 250);
+  text-shadow: 0 0 0 transparent;
+}
+
+.dark ::selection,
+[data-theme="dark"] ::selection {
+  background: #9bb1ff;
+  color: oklch(98% 0.01 250);
+  text-shadow: 0 0 0 transparent;
+}
+
+.dark ::-moz-selection,
+[data-theme="dark"] ::-moz-selection {
+  background: #9bb1ff;
+  color: oklch(98% 0.01 250);
+  text-shadow: 0 0 0 transparent;
+}
 /*
  * HeroUI Theme Customization
  * Add this to your global.css after importing @heroui/styles
@@ -94,3 +148,17 @@
   --warning-foreground: oklch(21.03% 0.0059 45.88);
   --accent-soft-foreground: oklch(0.9848 0 0);
 }
+
+
+@layer components {
+  .card__description {
+    @apply text-sm leading-5 text-gray-500;
+  }
+  .card, .card--default {
+    @apply ring-0 hover:ring-2 ring-accent transition-all active:ring-1;
+  }
+  .button--tertiary {
+    @apply text-default-foreground;
+  }
+}
+

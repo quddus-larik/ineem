@@ -5,21 +5,11 @@ import { ThemeSwitch } from "@/components/custom/switch.theme";
 import { supabase } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { handleConnectGmail } from "@/handlers/gmail.connect";
-
-interface EmailMessage {
-    id: string;
-    threadId: string;
-    snippet: string;
-    subject: string;
-    from: string;
-    date: string;
-}
+import { useEmailStore } from "@/stores/emails.inbox";
 
 function Page() {
     const [userData, setUserData] = useState<any>(null);
-    const [emails, setEmails] = useState<EmailMessage[]>([]);
-    const [loadingEmails, setLoadingEmails] = useState(false);
-    const [emailError, setEmailError] = useState<string | null>(null);
+    const { emails, loadingEmails, emailError, fetchEmails } = useEmailStore();
 
     useEffect(() => {
         async function fetchUser() {
@@ -33,37 +23,6 @@ function Page() {
         fetchUser();
     }, []);
 
-    // Function to call the gmail-connector Edge Function
-    async function fetchEmails() {
-        setLoadingEmails(true);
-        setEmailError(null);
-
-        try {
-            const { data, error } = await supabase.functions.invoke("gmail-connector", {
-                body: {
-                    action: "list_messages",
-                    query: "is:unread",
-                    maxResults: 10,
-                },
-            });
-
-            if (error) {
-                throw error;
-            }
-
-            if (data?.error) {
-                throw new Error(data.error);
-            }
-
-            setEmails(data?.messages || []);
-        } catch (err: any) {
-            console.error("Failed to fetch emails:", err);
-            setEmailError(err.message || "Failed to load emails");
-        } finally {
-            setLoadingEmails(false);
-        }
-    }
-
     return (
         <div className="p-6 space-y-6 max-w-4xl mx-auto">
             <div className="flex items-center justify-between">
@@ -72,7 +31,7 @@ function Page() {
                         Connect Gmail
                     </Button>
                     <Button
-                        onPress={fetchEmails}
+                        onPress={() => fetchEmails()}
                         isLoading={loadingEmails}
                         color="secondary"
                         variant="flat"
@@ -120,16 +79,16 @@ function Page() {
             <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-default-500">Raw Email JSON</h3>
                 <pre className="p-4 bg-default-100 rounded-lg text-xs overflow-x-auto max-h-60">
-          {JSON.stringify(emails, null, 2)}
-        </pre>
+                    {JSON.stringify(emails, null, 2)}
+                </pre>
             </div>
 
             {/* User Data Preview */}
             <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-default-500">User Session</h3>
                 <pre className="p-4 bg-default-100 rounded-lg text-xs overflow-x-auto max-h-60">
-          {JSON.stringify(userData, null, 2)}
-        </pre>
+                    {JSON.stringify(userData, null, 2)}
+                </pre>
             </div>
         </div>
     );
