@@ -79,7 +79,8 @@ export function MinimaDashboard({children}: LUIProps) {
                         {/*<MobileSidebar />*/}
                         <BreadcrumbsMinor/>
                     </div>
-                    <Button className={"w-auto lg:w-64 rounded-2xl ring-1 ring-muted/30"} variant={"secondary"}><Search />Search Mails</Button>
+                    <Button className={"w-auto lg:w-64 rounded-2xl ring-1 ring-muted/30"}
+                            variant={"secondary"}><Search/>Search Mails</Button>
                     <div className="items-center justify-between gap-2 hidden lg:flex">
                         {/*<InstituteSelector />*/}
                         <ButtonGroup>
@@ -90,13 +91,8 @@ export function MinimaDashboard({children}: LUIProps) {
                         <AvaterProfile/>
                     </div>
                 </div>
-                <div className="flex min-h-0 flex-1 flex-row gap-2">
-                    <EmailSidebar/>
 
-                    <section className="min-w-0 flex-1 overflow-auto">
-                        {children}
-                    </section>
-                </div>
+                {children}
             </main>
         </div>
     );
