@@ -1,5 +1,5 @@
 "use client";
-import { Surface, Typography, Label, Chip, Avatar, Description, Separator, Pagination } from "@heroui/react";
+import { Surface, Typography, Label, Chip, Avatar, Description, Separator, Pagination, Spinner } from "@heroui/react";
 import { useEmailStore } from "@/stores/emails.inbox";
 import { Paperclip } from "@mynaui/icons-react";
 import { useEffect } from "react";
@@ -13,15 +13,17 @@ export default function Page() {
     fetchEmails,
     setViewMail,
     selectedEmail,
-    selectedEmailId
+    selectedEmailId,
+    currentPage,
+    hasMore,
+    goToNextPage,
+    goToPrevPage
   } = useEmailStore();
 
   useEffect(() => {
     (async function() {
-      await fetchEmails("", 100);
+      await fetchEmails();
     })();
-
-
   }, []);
   console.log("emails", emails);
 
@@ -92,7 +94,7 @@ export default function Page() {
                 </Chip>
               </div>
 
-              <Label>1280 messages</Label>
+              <Label>300 messages</Label>
             </Surface>
 
             {/* Added `flex-1 min-h-0` to allow dynamic scrolling */}
@@ -146,17 +148,29 @@ export default function Page() {
             </div>
             <Pagination className="w-full">
               <Pagination.Summary className={"text-xs"}>
-                {1} to {50} of {890}
+                {(() => {
+                  const pageSize = 15;
+                  const total = 300;
+                  const start = (currentPage - 1) * pageSize + 1;
+                  const end = Math.min(currentPage * pageSize, total);
+                  return `${start} to ${end} of ${total}`;
+                })()}
               </Pagination.Summary>
               <Pagination.Content>
                 <Pagination.Item>
-                  <Pagination.Previous>
+                  <Pagination.Previous
+                    isDisabled={currentPage <= 1 || loadingEmails}
+                    onPress={goToPrevPage}
+                  >
                     <Pagination.PreviousIcon />
                     <span>Prev</span>
                   </Pagination.Previous>
                 </Pagination.Item>
                 <Pagination.Item>
-                  <Pagination.Next>
+                  <Pagination.Next
+                    isDisabled={!hasMore || loadingEmails}
+                    onPress={goToNextPage}
+                  >
                     <span>Next</span>
                     <Pagination.NextIcon />
                   </Pagination.Next>
@@ -172,7 +186,7 @@ export default function Page() {
                   <div className="flex items-center gap-3">
                     <Avatar size="md" variant="soft" color="accent">
                       <Avatar.Fallback>
-                        {(selectedEmail.from || selectedEmail.sender)?.[0] ||
+                        {(selectedEmail.from || selectedEmail?.sender)?.[0] ||
                           "U"}
                       </Avatar.Fallback>
                     </Avatar>
@@ -194,15 +208,22 @@ export default function Page() {
                 <div className="prose dark:prose-invert max-w-none pt-2">
                   {selectedEmail.body ? (
                     <iframe
-                      srcDoc={`<base target="_blank">${selectedEmail.body}`}
-                      className="w-full h-[60svh] border-none rounded-xl"
+                      srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank"></head><body>${selectedEmail.body}</body></html>`}
+                      className="w-full h-[55svh] border-none rounded-xl"
                       title="Email Body"
                       sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
                     />
                   ) : (
-                    <Typography.Paragraph>
-                      {selectedEmail.snippet}
-                    </Typography.Paragraph>
+                    <>
+                      <Spinner
+                        className="animate-[spin_0.4s_linear_infinite]"
+                        size="md"
+                        color="accent"
+                      />
+                      <Typography.Paragraph>
+                        Getting content please wait
+                      </Typography.Paragraph>
+                    </>
                   )}
                 </div>
               </div>
