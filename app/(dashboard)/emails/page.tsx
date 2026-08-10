@@ -1,7 +1,17 @@
 "use client";
-import { Surface, Typography, Label, Chip, Avatar, Description, Separator, Pagination, Spinner } from "@heroui/react";
+import {
+  Surface,
+  Typography,
+  Label,
+  Chip,
+  Avatar,
+  Description,
+  Separator,
+  Pagination,
+  Spinner
+} from "@heroui/react";
 import { useEmailStore } from "@/stores/emails.inbox";
-import { Paperclip } from "@mynaui/icons-react";
+import { Paperclip, MessageReply } from "@mynaui/icons-react";
 import { useEffect } from "react";
 import { EmailSidebar } from "@/components/custom/email-sidebar";
 
@@ -9,11 +19,12 @@ export default function Page() {
   const {
     emails,
     loadingEmails,
-    emailError,
     fetchEmails,
     setViewMail,
     selectedEmail,
     selectedEmailId,
+    selectedThreadMessages,
+    loadingThread,
     currentPage,
     hasMore,
     goToNextPage,
@@ -25,34 +36,12 @@ export default function Page() {
       await fetchEmails();
     })();
   }, []);
-  console.log("emails", emails);
-
-  async function getGravatarUrl(email: string): string {
-    const cleanEmail = email.trim().toLowerCase();
-
-    // Hash email with MD5
-    const encoder = new TextEncoder();
-    const data = encoder.encode(cleanEmail);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data); // or MD5
-
-    // Alternatively, use a lightweight md5 library or fallback:
-    // const hash = md5(cleanEmail);
-
-    // Fallback image parameter 'd' generates initials if email isn't registered
-    const fallbackUrl = encodeURIComponent(
-      `https://ui-avatars.com/api/${getSenderName(cleanEmail)}/128/7c3aed/ffffff`
-    );
-
-    return `https://www.gravatar.com/avatar/${hash}?d=${fallbackUrl}`;
-  }
 
   function formatDate(dateString?: string): string {
     if (!dateString) return "";
-
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString; // Return fallback string if invalid date
+    if (isNaN(date.getTime())) return dateString;
 
-    // Formats into: "08 Aug, 2026"
     return new Intl.DateTimeFormat("en-GB", {
       day: "2-digit",
       month: "short",
@@ -60,14 +49,12 @@ export default function Page() {
     }).format(date);
   }
 
-  // 1. Returns ONLY the clean email address (without < >)
   function getCleanEmail(senderString?: string): string {
     if (!senderString) return "";
     const match = senderString.match(/<([^>]+)>/);
     return match ? match[1] : senderString.trim();
   }
 
-// 2. Returns ONLY the name (removes the email address entirely)
   function getSenderName(senderString?: string): string {
     if (!senderString) return "Unknown";
     const name = senderString.replace(/<[^>]*>/g, "").trim();
@@ -80,8 +67,9 @@ export default function Page() {
       <section className="min-w-0 flex-1 overflow-auto">
         <Surface
           variant="default"
-          className={"w-full flex  flex-row items-start gap-2 rounded-2xl p-2"}
+          className="w-full flex flex-row items-start gap-2 rounded-2xl p-2"
         >
+          {/* Email List Panel */}
           <Surface className="flex w-72 h-[80svh] flex-col items-start gap-2 rounded-2xl p-2">
             <Surface
               variant="transparent"
@@ -97,7 +85,6 @@ export default function Page() {
               <Label>300 messages</Label>
             </Surface>
 
-            {/* Added `flex-1 min-h-0` to allow dynamic scrolling */}
             <div className="flex w-full flex-1 min-h-0 flex-col gap-1 overflow-y-auto">
               {emails?.map((email, idx: number) => (
                 <Surface
@@ -107,34 +94,34 @@ export default function Page() {
                     selectedEmailId === email.id ? "bg-accent-soft/50" : ""
                   }`}
                 >
-                  <Avatar size={"sm"} variant={"soft"} color={"accent"}>
-                    {/*<Avatar.Image src={getGravatarUrl(getCleanEmail(email.from))} />*/}
+                  <Avatar size="sm" variant="soft" color="accent">
                     <Avatar.Fallback>
-                      {(email.from || email.sender)?.[0] || "AE"}
+                      {(email.from || "U")?.[0] || "AE"}
                     </Avatar.Fallback>
                   </Avatar>
                   <div className="flex-1 min-w-0 flex-col">
-                    <div className={"flex flex-col"}>
-                      <Label className={"font-semibold"}>
-                        {getSenderName(email.from)}
-                      </Label>
-                      <Description className={"text-accent"}>
+                    <div className="flex flex-col">
+                      <div className="flex items-center justify-between gap-1">
+                        <Label className="font-semibold truncate">
+                          {getSenderName(email.from)}
+                        </Label>
+                      </div>
+                      <Description className="text-accent truncate">
                         {getCleanEmail(email.from)}
                       </Description>
                     </div>
-                    <Description className={"line-clamp-2"}>
-                      {email.snippet || "Go to the office..."}
+                    <Description className="line-clamp-2">
+                      {email.snippet || "No preview available..."}
                     </Description>
-                    <div
-                      className={
-                        "w-full flex justify-between items-center mt-1"
-                      }
-                    >
-                      <span>
-                        <Chip variant={"soft"} color={"accent"} size={"sm"}>
-                          <Paperclip className={"size-3"} />
+                    <div className="w-full flex justify-between items-center mt-1">
+                      <span className={"flex gap-1 items-center"}>
+                        <Chip variant="soft" color="accent" size="sm">
+                          <Paperclip className="size-3" />
                           03
                         </Chip>
+                        {email.isReply && (
+                          <MessageReply className="size-4" />
+                        )}
                       </span>
                       <span>
                         <Description>
@@ -146,8 +133,9 @@ export default function Page() {
                 </Surface>
               ))}
             </div>
+
             <Pagination className="w-full">
-              <Pagination.Summary className={"text-xs"}>
+              <Pagination.Summary className="text-xs">
                 {(() => {
                   const pageSize = 15;
                   const total = 300;
@@ -178,54 +166,140 @@ export default function Page() {
               </Pagination.Content>
             </Pagination>
           </Surface>
-          {/* Show Mail */}
+
+          {/* Email Thread / Detail View */}
           <Surface className="flex flex-1 min-h-[80svh] flex-col gap-4 rounded-2xl p-6 overflow-y-auto">
             {selectedEmail ? (
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col justify-center">
-                  <div className="flex items-center gap-3">
-                    <Avatar size="md" variant="soft" color="accent">
-                      <Avatar.Fallback>
-                        {(selectedEmail.from || selectedEmail?.sender)?.[0] ||
-                          "U"}
-                      </Avatar.Fallback>
-                    </Avatar>
-                    <div>
-                      <h2 className="text-base font-bold">
-                        {selectedEmail.subject || "No Subject"}
-                      </h2>
-                      <Label className="text-sm">
-                        From:{" "}
-                        {getCleanEmail(selectedEmail.from) || "Unknown Sender"}
-                      </Label>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold">
+                      {selectedEmail.subject || "No Subject"}
+                    </h2>
+                    {selectedThreadMessages.length > 1 && (
+                      <Chip variant="soft" color="accent">
+                        {selectedThreadMessages.length} Messages in Thread
+                      </Chip>
+                    )}
                   </div>
-                  <Description className={"mt-2"}>
-                    {formatDate(selectedEmail.date)}
-                  </Description>
                 </div>
+
                 <Separator />
-                <div className="prose dark:prose-invert max-w-none pt-2">
-                  {selectedEmail.body ? (
-                    <iframe
-                      srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank"></head><body>${selectedEmail.body}</body></html>`}
-                      className="w-full h-[55svh] border-none rounded-xl"
-                      title="Email Body"
-                      sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+
+                {loadingThread ? (
+                  <div className="flex flex-col items-center justify-center p-8 gap-2">
+                    <Spinner
+                      className="animate-[spin_0.4s_linear_infinite]"
+                      size="md"
+                      color="accent"
                     />
-                  ) : (
-                    <>
-                      <Spinner
-                        className="animate-[spin_0.4s_linear_infinite]"
-                        size="md"
-                        color="accent"
+                    <Typography.Paragraph>
+                      Loading message thread...
+                    </Typography.Paragraph>
+                  </div>
+                ) : selectedThreadMessages.length > 0 ? (
+                  /* Thread Message Chain */
+                  <div className="flex flex-col gap-6 h-[60svh] overflow-y-auto">
+                    {selectedThreadMessages.map((msg, index) => (
+                      <Surface
+                        key={msg.id}
+                        className={`flex flex-col gap-3 p-4 rounded-xl border ${
+                          msg.isUserSender
+                            ? "bg-accent-soft/20 border-accent/30 ml-4"
+                            : "bg-surface-default border-border"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Avatar size="sm" variant="soft" color="accent">
+                              <Avatar.Fallback>
+                                {getSenderName(msg.from)[0] || "U"}
+                              </Avatar.Fallback>
+                            </Avatar>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <Label className="text-sm font-semibold">
+                                  {getSenderName(msg.from)}
+                                </Label>
+                                {msg.isReply && (
+                                  <Chip
+                                    variant="soft"
+                                    color="accent"
+                                    size="sm"
+                                    className="text-[10px] px-1 py-0"
+                                  >
+                                    Reply #{index}
+                                  </Chip>
+                                )}
+                              </div>
+                              <Description className="text-xs">
+                                From: {getCleanEmail(msg.from)}
+                              </Description>
+                            </div>
+                          </div>
+                          <Description className="text-xs">
+                            {formatDate(msg.date)}
+                          </Description>
+                        </div>
+
+                        <Separator className="my-1" />
+
+                        {msg.body ? (
+                          <iframe
+                            srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank"></head><body style="font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 4px;">${msg.body}</body></html>`}
+                            className="w-full max-h-[40svh] border-none rounded-lg"
+                            title={`Email Body ${msg.id}`}
+                            sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                          />
+                        ) : (
+                          <Description className="italic">
+                            {msg.snippet || "No body content available."}
+                          </Description>
+                        )}
+                      </Surface>
+                    ))}
+                  </div>
+                ) : (
+                  /* Single Email View Fallback */
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar size="md" variant="soft" color="accent">
+                        <Avatar.Fallback>
+                          {getSenderName(selectedEmail.from)[0] || "U"}
+                        </Avatar.Fallback>
+                      </Avatar>
+                      <div>
+                        <Label className="text-sm font-semibold">
+                          From:{" "}
+                          {getCleanEmail(selectedEmail.from) ||
+                            "Unknown Sender"}
+                        </Label>
+                        <Description className="text-xs">
+                          {formatDate(selectedEmail.date)}
+                        </Description>
+                      </div>
+                    </div>
+                    {selectedEmail.body ? (
+                      <iframe
+                        srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank"></head><body>${selectedEmail.body}</body></html>`}
+                        className="w-full h-[55svh] border-none rounded-xl"
+                        title="Email Body"
+                        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
                       />
-                      <Typography.Paragraph>
-                        Getting content please wait
-                      </Typography.Paragraph>
-                    </>
-                  )}
-                </div>
+                    ) : (
+                      <div className="flex items-center gap-2 p-4">
+                        <Spinner
+                          className="animate-[spin_0.4s_linear_infinite]"
+                          size="md"
+                          color="accent"
+                        />
+                        <Typography.Paragraph>
+                          Getting content, please wait...
+                        </Typography.Paragraph>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex flex-1 h-full items-center justify-center">

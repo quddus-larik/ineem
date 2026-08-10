@@ -13,22 +13,6 @@ import {
 
 
 export function getMenuItems(selected?: string | null) {
-    const subjectsUrl = selected
-        ? `/institutes/${selected}/subjects`
-        : "/institutes";
-    const instituteUrl = selected ? `/institutes/${selected}` : "/institutes";
-    const classesUrl = selected
-        ? `/institutes/${selected}/classes`
-        : "/institutes";
-    const studentsUrl = selected
-        ? `/institutes/${selected}/students`
-        : "/institutes";
-    const expensesUrl = selected
-        ? `/institutes/${selected}/expense`
-        : "/institutes";
-    const attendanceUrl = selected
-        ? `/institutes/${selected}/attendance`
-        : "/institutes";
 
     return [
         {icon: Mail, title: "Mails", url: "/emails"},
@@ -38,8 +22,4 @@ export function getMenuItems(selected?: string | null) {
         {icon: UsersGroup, title: "Contacts", url: "/contacts"},
         // {icon: Ticket, title: "Expenses", url: expensesUrl},
     ];
-}
-
-export function getExpenseClassUrl(instituteSlug: string, classSlug: string) {
-    return `/institutes/${instituteSlug}/expense/${classSlug}`;
 }

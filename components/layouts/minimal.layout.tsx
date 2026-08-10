@@ -30,70 +30,79 @@ export function MinimaDashboard({children}: LUIProps) {
     const icons = getMenuItems("/dashboard");
 
     return (
-        <div className="w-full min-h-screen flex bg-background-secondary dark:bg-background-inverse/2">
-            <FabButton className="bottom-5 right-5 z-10 p-6 rounded-2xl fixed"/>
-            <aside className="hidden lg:flex lg:w-20 lg:fixed lg:h-screen py-8 flex-col items-center justify-between">
-                <Link href="/dashboard">
-                    <Layout
-                        className={`text-background-inverse cursor-pointer ${pathname === "/dashboard" ? "text-background-inverse" : "text-muted"}`}
-                    />
-                </Link>
-                <nav className="flex flex-col gap-6 w-full">
-                    {icons.map((Icon, i) => (
-                        <Tooltip delay={0} key={i}>
-                            <Tooltip.Trigger>
-                                <Link href={Icon.url}>
-                                    <button
-                                        className="group relative w-full flex items-center justify-center py-3 cursor-pointer"
-                                        disabled={Icon.url == "/institute"}
-                                    >
-                                        <div
-                                            className={`absolute left-0 h-full ${
-                                                pathname == Icon.url ? "w-1" : "w-[2px]"
-                                            } bg-background-inverse ${
-                                                pathname == Icon.url ? "opacity-100" : "opacity-0"
-                                            } group-hover:opacity-100 transition-all rounded-r-lg`}
-                                        />
-                                        <Icon.icon
-                                            className={
-                                                (pathname == Icon.url && pathname !== "/institute"
-                                                    ? "text-background-inverse"
-                                                    : "text-muted") + " transition-all"
-                                            }
-                                        />
-                                    </button>
-                                </Link>
-                            </Tooltip.Trigger>
-                            <Tooltip.Content placement="right">{Icon.title}</Tooltip.Content>
-                        </Tooltip>
-                    ))}
-                </nav>
+      <div className="w-full min-h-screen flex bg-background-secondary dark:bg-background-inverse/2">
+        <FabButton className="bottom-5 right-5 z-10 p-6 rounded-2xl fixed" />
+        <aside className="hidden lg:flex lg:w-20 lg:fixed lg:h-screen py-8 flex-col items-center justify-between">
+          <Link href="/dashboard">
+            <Layout
+              className={`text-background-inverse cursor-pointer ${pathname === "/dashboard" ? "text-background-inverse" : "text-muted"}`}
+            />
+          </Link>
+          <nav className="flex flex-col gap-6 w-full">
+            {icons.map((Icon, i) => (
+              <Tooltip delay={0} key={i}>
+                <Tooltip.Trigger>
+                  <Link href={Icon.url}>
+                    <button
+                      className="group relative w-full flex items-center justify-center py-3 cursor-pointer"
+                      // disabled={Icon.url == "/institute"}
+                    >
+                      <div
+                        className={`absolute left-0 h-full ${
+                          pathname.includes(Icon.url) ? "w-1" : "w-[2px]"
+                        } bg-background-inverse ${
+                          pathname.includes(Icon.url)
+                            ? "opacity-100"
+                            : "opacity-0"
+                        } group-hover:opacity-100 transition-all rounded-r-lg`}
+                      />
+                      <Icon.icon
+                        className={
+                          (pathname.includes(Icon.url) &&
+                          pathname !== "/institute"
+                            ? "text-background-inverse"
+                            : "text-muted") + " transition-all"
+                        }
+                      />
+                    </button>
+                  </Link>
+                </Tooltip.Trigger>
+                <Tooltip.Content placement="right">
+                  {Icon.title}
+                </Tooltip.Content>
+              </Tooltip>
+            ))}
+          </nav>
 
-                <FooterSidebar/>
-            </aside>
+          <FooterSidebar />
+        </aside>
 
-            <main
-                className="flex flex-1 min-w-0 flex-col min-h-[calc(100vh-1.5rem)] p-5 bg-background m-1 lg:m-3 rounded-3xl shadow-sm lg:ml-[92px] gap-2">
-                <div className="w-full flex justify-between items-center h-10">
-                    <div className="flex gap-2 items-center justify-start">
-                        {/*<MobileSidebar />*/}
-                        <BreadcrumbsMinor/>
-                    </div>
-                    <Button className={"w-auto lg:w-64 rounded-2xl ring-1 ring-muted/30"}
-                            variant={"secondary"}><Search/>Search Mails</Button>
-                    <div className="items-center justify-between gap-2 hidden lg:flex">
-                        {/*<InstituteSelector />*/}
-                        <ButtonGroup>
-                            <NotificationButton/>
-                            <SettingDrawerButton/>
-                        </ButtonGroup>
-                        <ThemeSwitch/>
-                        <AvaterProfile/>
-                    </div>
-                </div>
+        <main className="flex flex-1 min-w-0 flex-col min-h-[calc(100vh-1.5rem)] p-5 bg-background m-1 lg:m-3 rounded-3xl shadow-sm lg:ml-[92px] gap-2">
+          <div className="w-full flex justify-between items-center h-10">
+            <div className="flex gap-2 items-center justify-start">
+              {/*<MobileSidebar />*/}
+              <BreadcrumbsMinor />
+            </div>
+            <Button
+              className={"w-auto lg:w-64 rounded-2xl ring-1 ring-muted/30"}
+              variant={"secondary"}
+            >
+              <Search />
+              Search Mails
+            </Button>
+            <div className="items-center justify-between gap-2 hidden lg:flex">
+              {/*<InstituteSelector />*/}
+              <ButtonGroup>
+                <NotificationButton />
+                <SettingDrawerButton />
+              </ButtonGroup>
+              <ThemeSwitch />
+              <AvaterProfile />
+            </div>
+          </div>
 
-                {children}
-            </main>
-        </div>
+          {children}
+        </main>
+      </div>
     );
 }

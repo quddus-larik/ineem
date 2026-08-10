@@ -7,24 +7,28 @@ export interface EmailMessage {
   snippet: string;
   subject: string;
   from: string;
+  to?: string;
   date: string;
   body?: string;
+  isReply?: boolean;
+  isUserSender?: boolean;
+  sequencePosition?: number;
 }
 
 interface EmailStore {
   emails: EmailMessage[];
   selectedEmailId: string | null;
   selectedEmail: EmailMessage | null;
+  selectedThreadMessages: EmailMessage[];
   loadingEmails: boolean;
   loadingSingleEmail: boolean;
+  loadingThread: boolean;
   emailError: string | null;
   currentPage: number;
   hasMore: boolean;
   nextPageToken: string | null;
   pageTokens: string[];
   currentQuery: string;
-
-  // Cache pages locally: { 1: [emails], 2: [emails] }
   pageCache: Record<number, EmailMessage[]>;
 
   fetchEmails: (
@@ -43,8 +47,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   emails: [],
   selectedEmailId: null,
   selectedEmail: null,
+  selectedThreadMessages: [],
   loadingEmails: false,
   loadingSingleEmail: false,
+  loadingThread: false,
   emailError: null,
   currentPage: 1,
   hasMore: false,
@@ -61,7 +67,6 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   ) => {
     const { pageCache } = get();
 
-    // 1. INSTANT CACHE HIT: If page data is already in memory, load instantly without network delay
     if (pageCache[targetPage]) {
       set({
         emails: pageCache[targetPage],
@@ -71,7 +76,6 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       return;
     }
 
-    // 2. CACHE MISS: Perform network request
     set({ loadingEmails: true, emailError: null, currentQuery: query });
 
     try {
@@ -80,15 +84,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         query,
         maxResults,
       };
-      if (pageToken) {
-        body.pageToken = pageToken;
-      }
+      if (pageToken) body.pageToken = pageToken;
 
       const { data, error } = await supabase.functions.invoke(
         "gmail-connector",
-        {
-          body,
-        },
+        { body },
       );
 
       if (error) throw error;
@@ -102,7 +102,6 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         currentPage: targetPage,
         hasMore: !!newNextPageToken,
         nextPageToken: newNextPageToken,
-        // Store fetched page in cache
         pageCache: { ...state.pageCache, [targetPage]: fetchedEmails },
       }));
 
@@ -122,7 +121,6 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   goToNextPage: async () => {
     const {
-      hasMore,
       nextPageToken,
       pageTokens,
       currentQuery,
@@ -147,14 +145,16 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const prevToken = prevTokens[prevTokens.length - 1] || undefined;
 
     set({ pageTokens: prevTokens });
-
-    // Will hit the cache instantly without network wait!
     await fetchEmails(currentQuery, 15, prevToken, prevPage);
   },
 
   setViewMail: async (id: string | null) => {
     if (!id) {
-      set({ selectedEmailId: null, selectedEmail: null });
+      set({
+        selectedEmailId: null,
+        selectedEmail: null,
+        selectedThreadMessages: [],
+      });
       return;
     }
 
@@ -163,42 +163,62 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     set({
       selectedEmailId: id,
       selectedEmail: existingEmail,
+      selectedThreadMessages: [],
       loadingSingleEmail: true,
+      loadingThread: true,
     });
 
     try {
+      if (existingEmail?.threadId) {
+        const { data: threadData, error: threadError } =
+          await supabase.functions.invoke("gmail-connector", {
+            body: { action: "get_thread", threadId: existingEmail.threadId },
+          });
+
+        if (!threadError && threadData?.messages?.length) {
+          const threadMsgs: EmailMessage[] = threadData.messages;
+          const activeMail =
+            threadMsgs.find((m) => m.id === id) || threadMsgs[0];
+
+          set({
+            selectedThreadMessages: threadMsgs,
+            selectedEmail: activeMail,
+          });
+          return;
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke(
         "gmail-connector",
-        {
-          body: {
-            action: "get_message",
-            id,
-          },
-        },
+        { body: { action: "get_message", id } },
       );
 
       if (error) throw error;
 
       if (data?.message) {
+        const fullMsg: EmailMessage = {
+          ...existingEmail,
+          ...data.message,
+          body:
+            data.message.body || data.message.snippet || existingEmail?.snippet,
+        };
         set({
-          selectedEmail: {
-            ...existingEmail,
-            ...data.message,
-            body:
-              data.message.body ||
-              data.message.snippet ||
-              existingEmail?.snippet,
-          },
+          selectedEmail: fullMsg,
+          selectedThreadMessages: [fullMsg],
         });
       }
     } catch (err: any) {
-      console.error("Failed to fetch full email body:", err);
+      console.error("Failed to fetch full email body or thread:", err);
     } finally {
-      set({ loadingSingleEmail: false });
+      set({ loadingSingleEmail: false, loadingThread: false });
     }
   },
 
   clearViewMail: () => {
-    set({ selectedEmailId: null, selectedEmail: null });
+    set({
+      selectedEmailId: null,
+      selectedEmail: null,
+      selectedThreadMessages: [],
+    });
   },
 }));
