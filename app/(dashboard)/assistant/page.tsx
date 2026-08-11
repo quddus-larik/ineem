@@ -1,13 +1,16 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, Button, Typography } from "@heroui/react";
 import { LinkTwo, ArrowUp, Search, List } from "@mynaui/icons-react";
 import { ThinkingOrb } from "thinking-orbs";
+import { supabase } from "@/lib/supabase/client";
 
 export default function Page() {
   const [value, setValue] = useState("");
   const textareaRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -16,6 +19,38 @@ export default function Page() {
       textarea.style.height = `${textarea?.scrollHeight}px`;
     }
   }, [value]);
+
+  const handleSend = async () => {
+    if (!value || !value.trim()) return;
+
+    // get existing session id from localStorage
+    let sessionId = localStorage.getItem("chat_session_id");
+
+    // create session if missing
+    if (!sessionId) {
+      try {
+        const { data: userData, error: userErr } = await supabase.auth.getUser();
+        if (userErr || !userData?.user) {
+          console.error("No authenticated user to create session", userErr);
+        } else {
+          const userId = userData.user.id;
+          const title = value.slice(0, 60) || "Chat session";
+          const { data, error } = await supabase.from("session").insert({ user_id: userId, title }).select("id").single();
+          if (error) throw error;
+          sessionId = data.id;
+          localStorage.setItem("chat_session_id", sessionId);
+        }
+      } catch (err) {
+        console.error("Failed to create session:", err);
+      }
+    }
+
+    // navigate to assistant session page with message as query param
+    if (sessionId) {
+      const encoded = encodeURIComponent(value);
+      router.push(`/assistant/${sessionId}?m=${encoded}`);
+    }
+  };
 
   return (
     <div className="relative w-full min-h-[80svh] flex flex-col gap-3 items-center justify-center p-4 pt-32">
@@ -47,7 +82,7 @@ export default function Page() {
               <LinkTwo />
             </Button>
 
-            <Button isIconOnly size="lg">
+            <Button isIconOnly size="lg" onClick={handleSend}>
               <ArrowUp />
             </Button>
           </div>

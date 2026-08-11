@@ -8,7 +8,8 @@ import {
   Description,
   Separator,
   Pagination,
-  Spinner
+  Spinner,
+  Button
 } from "@heroui/react";
 import { useEmailStore } from "@/stores/emails.inbox";
 import { Paperclip, MessageReply } from "@mynaui/icons-react";
@@ -63,7 +64,7 @@ export default function Page() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-row gap-2">
-      <EmailSidebar />
+      {/*<EmailSidebar />*/}
       <section className="min-w-0 flex-1 overflow-auto">
         <Surface
           variant="default"
@@ -247,7 +248,7 @@ export default function Page() {
                         {msg.body ? (
                           <iframe
                             srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank"></head><body style="font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 4px;">${msg.body}</body></html>`}
-                            className="w-full max-h-[40svh] border-none rounded-lg"
+                            className="w-full h-[50svh] border-none rounded-lg"
                             title={`Email Body ${msg.id}`}
                             sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
                           />
@@ -302,10 +303,18 @@ export default function Page() {
                 )}
               </div>
             ) : (
-              <div className="flex flex-1 h-full items-center justify-center">
+              <div className="flex flex-1 h-[40svh] items-center justify-center">
                 <Description>Select an email to read its content</Description>
               </div>
             )}
+            {
+              selectedEmail && (
+                <Surface className={"flex justify-between items-center"}>
+                  <Label>Summerize with AI</Label>
+                  <Button>Summerize it</Button>
+                </Surface>
+              )
+            }
           </Surface>
         </Surface>
       </section>

@@ -1,13 +1,21 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { Card, Button, Typography, Surface, Description } from "@heroui/react";
 import { LinkTwo, ArrowUp, Search, List } from "@mynaui/icons-react";
 import { ThinkingOrb } from "thinking-orbs";
 
 export default function Page() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const a_id = params?.a_id || "";
+
   const [value, setValue] = useState("");
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [loading, setLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const incoming = searchParams?.get("m") || null;
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -16,6 +24,58 @@ export default function Page() {
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
   }, [value]);
+
+  useEffect(() => {
+    // if message provided via query param, send it to api
+    if (incoming && a_id) {
+      const msg = decodeURIComponent(incoming);
+      // add user message to UI
+      setMessages((s) => [...s, { role: "user", content: msg }]);
+
+      const send = async () => {
+        setLoading(true);
+        try {
+          const res = await fetch("/api/v1/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: msg, sessionId: a_id }),
+          });
+          const data = await res.json();
+          // show JSON response in UI as string
+          setMessages((s) => [...s, { role: "assistant", content: JSON.stringify(data) }]);
+        } catch (e: any) {
+          setMessages((s) => [...s, { role: "assistant", content: JSON.stringify({ error: e?.message || String(e) }) }]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      send();
+    }
+    // run only once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSend = async () => {
+    if (!value || !value.trim() || !a_id) return;
+    const msg = value.trim();
+    setMessages((s) => [...s, { role: "user", content: msg }]);
+    setValue("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/v1/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg, sessionId: a_id }),
+      });
+      const data = await res.json();
+      setMessages((s) => [...s, { role: "assistant", content: JSON.stringify(data) }]);
+    } catch (e: any) {
+      setMessages((s) => [...s, { role: "assistant", content: JSON.stringify({ error: e?.message || String(e) }) }]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex h-[80svh] w-full overflow-hidden bg-background">
@@ -32,26 +92,37 @@ export default function Page() {
 
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col h-full relative overflow-hidden">
-        {/* Scrollable Chat / Welcome Body */}
-        {/*<div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4 pb-32">*/}
-        {/*  <div className="flex flex-col items-center font-semibold justify-center gap-3">*/}
-        {/*    <ThinkingOrb state="breathing" size={64} speed={0.5} />*/}
-        {/*    <Typography.Paragraph>Hi! How Can I Help You</Typography.Paragraph>*/}
-        {/*  </div>*/}
-        {/*</div>*/}
-        <div className="flex-1 overflow-y-auto flex flex-col items-end justify-start px-32 pt-5">
-          <Card
-            variant={"secondary"}
-            className={
-              "p-2 px-3 rounded-xl max-w-lg shadow-sm ring-1 ring-muted/80"
-            }
-          >
-            <Card.Content>
-              <Typography.Paragraph className={"line-clamp-3 text-sm"}>
-                Hello How are you can i help you
-              </Typography.Paragraph>
-            </Card.Content>
-          </Card>
+        <div className="flex-1 overflow-y-auto flex flex-col items-end justify-start px-32 pt-5 space-y-3">
+          {messages.length === 0 ? (
+            <Card
+              variant={"secondary"}
+              className={
+                "p-2 px-3 rounded-xl max-w-lg shadow-sm ring-1 ring-muted/80"
+              }
+            >
+              <Card.Content>
+                <Typography.Paragraph className={"line-clamp-3 text-sm"}>
+                  Hello How are you can i help you
+                </Typography.Paragraph>
+              </Card.Content>
+            </Card>
+          ) : (
+            messages.map((m, idx) => (
+              <Card
+                key={idx}
+                variant={m.role === "assistant" ? "secondary" : undefined}
+                className={
+                  "p-2 px-3 rounded-xl max-w-lg shadow-sm ring-1 ring-muted/80"
+                }
+              >
+                <Card.Content>
+                  <Typography.Paragraph className={"text-sm"}>
+                    {m.content}
+                  </Typography.Paragraph>
+                </Card.Content>
+              </Card>
+            ))
+          )}
         </div>
 
         {/* Bottom Fixed Card Wrapper */}
@@ -81,7 +152,7 @@ export default function Page() {
                     <LinkTwo />
                   </Button>
 
-                  <Button isIconOnly size="sm">
+                  <Button isIconOnly size="sm" onClick={handleSend} disabled={loading}>
                     <ArrowUp />
                   </Button>
                 </div>

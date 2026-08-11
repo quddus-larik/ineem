@@ -83,13 +83,13 @@ export function MinimaDashboard({children}: LUIProps) {
               {/*<MobileSidebar />*/}
               <BreadcrumbsMinor />
             </div>
-            <Button
-              className={"w-auto lg:w-64 rounded-2xl ring-1 ring-muted/30"}
-              variant={"secondary"}
-            >
-              <Search />
-              Search Mails
-            </Button>
+            {/*<Button*/}
+            {/*  className={"w-auto lg:w-64 rounded-2xl ring-1 ring-muted/30"}*/}
+            {/*  variant={"secondary"}*/}
+            {/*>*/}
+            {/*  <Search />*/}
+            {/*  Search Mails*/}
+            {/*</Button>*/}
             <div className="items-center justify-between gap-2 hidden lg:flex">
               {/*<InstituteSelector />*/}
               <ButtonGroup>
