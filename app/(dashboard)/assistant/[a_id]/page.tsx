@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Card, Button, Typography, Surface, Description } from "@heroui/react";
 import { LinkTwo, ArrowUp, Search } from "@mynaui/icons-react";
 import { ThinkingOrb } from "thinking-orbs";
+import { supabase } from "@/lib/supabase/client";
 
 type Message = {
   role: "user" | "assistant";
@@ -13,6 +14,7 @@ type Message = {
   query?: string;
   maxResults?: number;
   actions?: string;
+  emails?: any[];
 };
 
 type ApiResponse =
@@ -47,10 +49,6 @@ export default function Page() {
 
   const incomingSentRef = useRef(false);
 
-  // --------------------------------------------------
-  // Auto resize textarea
-  // --------------------------------------------------
-
   useEffect(() => {
     const textarea = textareaRef.current;
 
@@ -60,19 +58,11 @@ export default function Page() {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 176)}px`;
   }, [value]);
 
-  // --------------------------------------------------
-  // Scroll to latest message
-  // --------------------------------------------------
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth"
     });
   }, [messages, loading]);
-
-  // --------------------------------------------------
-  // Send message
-  // --------------------------------------------------
 
   const sendMessage = async (msg: string) => {
     if (!msg.trim() || !a_id || loading) {
@@ -92,23 +82,36 @@ export default function Page() {
     setLoading(true);
 
     try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        throw sessionError;
+      }
+
+      if (!session?.access_token || !session.user?.id) {
+        throw new Error("You are not authenticated.");
+      }
+
       const res = await fetch("/api/v1/chat", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           message,
-          sessionId: a_id
-        })
+          sessionId: session.user.id,
+        }),
       });
 
-      const data: ApiResponse = await res.json();
+      const data: ApiResponse & { emails?: any } = await res.json();
 
       if (!res.ok) {
-        throw new Error("error" in data ? data.error : "Something went wrong");
+        throw new Error("error" in data ? (data as any).error : "Something went wrong");
       }
-
 
       if (data.type === "conversation") {
         setMessages((prev) => [
@@ -123,8 +126,9 @@ export default function Page() {
         return;
       }
 
-
       if (data.type === "find-email") {
+        const payloadContent = data?.emails ? { ...data, emails: (data as any).emails } : data;
+
         setMessages((prev) => [
           ...prev,
           {
@@ -133,13 +137,13 @@ export default function Page() {
             content: data.query,
             query: data.query,
             maxResults: data.maxResults,
-            actions: data.actions
+            actions: data.actions,
+            emails: (data as any).emails || undefined,
           }
         ]);
 
         return;
       }
-
 
       setMessages((prev) => [
         ...prev,
@@ -163,7 +167,6 @@ export default function Page() {
     }
   };
 
-
   useEffect(() => {
     if (!incoming || !a_id || incomingSentRef.current) {
       return;
@@ -175,9 +178,7 @@ export default function Page() {
 
     sendMessage(msg);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incoming, a_id]);
-
 
   const handleSend = async () => {
     if (!value.trim() || loading) {
@@ -190,7 +191,6 @@ export default function Page() {
 
     await sendMessage(msg);
   };
-
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -217,14 +217,12 @@ export default function Page() {
         </div>
       </aside>
 
-
       <main className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Messages */}
+        {}
 
         <div className="flex-1 overflow-y-auto px-4 pb-44 pt-6 md:px-8 lg:px-16">
           <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
             {messages.map((item, index) => {
-
 
               if (item.role === "user") {
                 return (
@@ -241,10 +239,6 @@ export default function Page() {
                 );
               }
 
-              // ----------------------------------------
-              // EMAIL SEARCH
-              // ----------------------------------------
-
               if (item.type === "find-email") {
                 return (
                   <div key={index} className="flex justify-start">
@@ -252,13 +246,12 @@ export default function Page() {
                       variant="secondary"
                       className="w-full rounded-2xl p-4"
                     >
-                      {JSON.stringify(item)}
+                      {JSON.stringify(item.emails)}
+                      {}
                     </Surface>
                   </div>
                 );
               }
-
-              // errors
 
               if (item.type === "error") {
                 return (
@@ -273,10 +266,6 @@ export default function Page() {
                 );
               }
 
-              // ----------------------------------------
-              // NORMAL ASSISTANT MESSAGE
-              // ----------------------------------------
-
               return (
                 <div key={index} className="flex justify-start">
                   <div className="max-w-[85%] px-1 py-1">
@@ -287,7 +276,6 @@ export default function Page() {
                 </div>
               );
             })}
-
 
             {loading && (
               <div className="flex justify-start">
@@ -305,9 +293,9 @@ export default function Page() {
           </div>
         </div>
 
-        {/* ------------------------------------------------ */}
-        {/* Composer */}
-        {/* ------------------------------------------------ */}
+        {}
+        {}
+        {}
 
         <div className="absolute inset-x-0 bottom-0 px-4 pb-4 md:px-8">
           <div className="mx-auto w-full max-w-3xl">
@@ -365,3 +353,4 @@ export default function Page() {
     </div>
   );
 }
+

@@ -11,10 +11,6 @@ import { supabase } from "@/lib/supabase/client";
 
 const messagesHistories: Record<string, ChatMessageHistory> = {};
 
-// --------------------------------------------------
-// Load chat history from Supabase
-// --------------------------------------------------
-
 const loadHistoryFromDb = async (
   sessionId: string
 ): Promise<ChatMessageHistory> => {
@@ -83,10 +79,6 @@ const loadHistoryFromDb = async (
   return history;
 };
 
-// --------------------------------------------------
-// Convert LLM content to string
-// --------------------------------------------------
-
 function contentToString(content: unknown): string {
   if (typeof content === "string") {
     return content;
@@ -117,10 +109,6 @@ function contentToString(content: unknown): string {
   return String(content ?? "");
 }
 
-// --------------------------------------------------
-// Extract JSON from LLM response
-// --------------------------------------------------
-
 function parseJsonResponse(content: string) {
   try {
     return JSON.parse(content);
@@ -137,19 +125,11 @@ function parseJsonResponse(content: string) {
   }
 }
 
-// --------------------------------------------------
-// Create Groq LLM
-// --------------------------------------------------
-
 const llm = new ChatGroq({
   model: "llama-3.3-70b-versatile",
   temperature: 0,
   apiKey: process.env.GROQ_API_KEY,
 });
-
-// --------------------------------------------------
-// POST /api/chat
-// --------------------------------------------------
 
 export async function POST(req: NextRequest) {
   try {
@@ -157,10 +137,6 @@ export async function POST(req: NextRequest) {
 
     const message = body?.message;
     const sessionId = body?.sessionId;
-
-    // -----------------------------------------------
-    // Validation
-    // -----------------------------------------------
 
     if (
       typeof message !== "string" ||
@@ -187,10 +163,6 @@ export async function POST(req: NextRequest) {
     }
 
     const userMessage = message.trim();
-
-    // -----------------------------------------------
-    // 1. CLASSIFY USER REQUEST
-    // -----------------------------------------------
 
     const classifierResponse = await llm.invoke(`
 You are an AI request classifier.
@@ -323,39 +295,67 @@ ${userMessage}
     const classification =
       parseJsonResponse(classificationText);
 
-    // -----------------------------------------------
-    // 2. FIND EMAIL
-    //
-    // IMPORTANT:
-    // We DO NOT call Supabase here.
-    // We only return instructions to the caller.
-    // -----------------------------------------------
+    if (classification.type === "find-email") {
+      const emailQuery =
+        typeof classification.query === "string"
+          ? classification.query
+          : "";
+      const maxResults = 10;
 
-    if (
-      classification.type === "find-email"
-    ) {
-      return NextResponse.json({
-        type: "find-email",
-        query:
-          typeof classification.query === "string"
-            ? classification.query
-            : "",
-        maxResults: 10,
-        actions: "list_messages",
-      });
+      try {
+        const emailsUrl = new URL("/api/v1/emails", req.url);
+        emailsUrl.searchParams.set("action", "list_messages");
+        emailsUrl.searchParams.set("query", emailQuery);
+        emailsUrl.searchParams.set("maxResults", String(maxResults));
+        emailsUrl.searchParams.set("user_id", sessionId);
+
+        const authHeader = req.headers.get("authorization");
+
+        const emailsRes = await fetch(emailsUrl.toString(), {
+          method: "GET",
+          cache: "no-store",
+          headers: authHeader ? { Authorization: authHeader } : undefined,
+        });
+
+        const emailsData = await emailsRes.json().catch(() => null);
+
+        if (!emailsRes.ok) {
+          return NextResponse.json(
+            {
+              type: "find-email",
+              query: emailQuery,
+              maxResults,
+              actions: "list_messages",
+              error: emailsData || "failed to fetch emails",
+            },
+            { status: emailsRes.status || 500 }
+          );
+        }
+
+        return NextResponse.json({
+          type: "find-email",
+          query: emailQuery,
+          maxResults,
+          actions: "list_messages",
+          emails: emailsData,
+        });
+      } catch (err: any) {
+        return NextResponse.json(
+          {
+            type: "find-email",
+            query: emailQuery,
+            maxResults,
+            actions: "list_messages",
+            error: err?.message || String(err),
+          },
+          { status: 500 }
+        );
+      }
     }
-
-    // -----------------------------------------------
-    // 3. NORMAL CONVERSATION
-    // -----------------------------------------------
 
     const history = await loadHistoryFromDb(
       sessionId
     );
-
-    // -----------------------------------------------
-    // Save user message
-    // -----------------------------------------------
 
     const { error: userInsertError } =
       await supabase.from("chat").insert([
@@ -374,10 +374,6 @@ ${userMessage}
         userInsertError
       );
     }
-
-    // -----------------------------------------------
-    // Conversation prompt
-    // -----------------------------------------------
 
     const prompt =
       ChatPromptTemplate.fromMessages([
@@ -403,10 +399,6 @@ data unless the user explicitly provides that data.`,
 
     const chain = prompt.pipe(llm);
 
-    // -----------------------------------------------
-    // Memory-enabled conversation chain
-    // -----------------------------------------------
-
     const conversationalChain =
       new RunnableWithMessageHistory({
         runnable: chain,
@@ -425,10 +417,6 @@ data unless the user explicitly provides that data.`,
         historyMessagesKey: "history",
       });
 
-    // -----------------------------------------------
-    // Generate response
-    // -----------------------------------------------
-
     const response =
       await conversationalChain.invoke(
         {
@@ -444,10 +432,6 @@ data unless the user explicitly provides that data.`,
     const content = contentToString(
       response?.content
     );
-
-    // -----------------------------------------------
-    // Save assistant response
-    // -----------------------------------------------
 
     const { error: assistantInsertError } =
       await supabase.from("chat").insert([
@@ -466,10 +450,6 @@ data unless the user explicitly provides that data.`,
         assistantInsertError
       );
     }
-
-    // -----------------------------------------------
-    // Return conversation response
-    // -----------------------------------------------
 
     return NextResponse.json({
       type: "conversation",
