@@ -3,162 +3,363 @@
 import { useRef, useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Card, Button, Typography, Surface, Description } from "@heroui/react";
-import { LinkTwo, ArrowUp, Search, List } from "@mynaui/icons-react";
+import { LinkTwo, ArrowUp, Search } from "@mynaui/icons-react";
 import { ThinkingOrb } from "thinking-orbs";
+
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+  type?: "conversation" | "find-email" | "error";
+  query?: string;
+  maxResults?: number;
+  actions?: string;
+};
+
+type ApiResponse =
+  | {
+  type: "conversation";
+  response: string;
+}
+  | {
+  type: "find-email";
+  query: string;
+  maxResults: number;
+  actions: string;
+}
+  | {
+  error: string;
+};
 
 export default function Page() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const a_id = params?.a_id || "";
+
+  const a_id = String(params?.a_id || "");
+  const incoming = searchParams?.get("m") || null;
 
   const [value, setValue] = useState("");
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const incoming = searchParams?.get("m") || null;
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const incomingSentRef = useRef(false);
+
+  // --------------------------------------------------
+  // Auto resize textarea
+  // --------------------------------------------------
 
   useEffect(() => {
     const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = "auto";
-      textarea.style.height = `${textarea.scrollHeight}px`;
-    }
+
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 176)}px`;
   }, [value]);
 
+  // --------------------------------------------------
+  // Scroll to latest message
+  // --------------------------------------------------
+
   useEffect(() => {
-    // if message provided via query param, send it to api
-    if (incoming && a_id) {
-      const msg = decodeURIComponent(incoming);
-      // add user message to UI
-      setMessages((s) => [...s, { role: "user", content: msg }]);
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth"
+    });
+  }, [messages, loading]);
 
-      const send = async () => {
-        setLoading(true);
-        try {
-          const res = await fetch("/api/v1/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: msg, sessionId: a_id }),
-          });
-          const data = await res.json();
-          // show JSON response in UI as string
-          setMessages((s) => [...s, { role: "assistant", content: JSON.stringify(data) }]);
-        } catch (e: any) {
-          setMessages((s) => [...s, { role: "assistant", content: JSON.stringify({ error: e?.message || String(e) }) }]);
-        } finally {
-          setLoading(false);
-        }
-      };
+  // --------------------------------------------------
+  // Send message
+  // --------------------------------------------------
 
-      send();
+  const sendMessage = async (msg: string) => {
+    if (!msg.trim() || !a_id || loading) {
+      return;
     }
-    // run only once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  const handleSend = async () => {
-    if (!value || !value.trim() || !a_id) return;
-    const msg = value.trim();
-    setMessages((s) => [...s, { role: "user", content: msg }]);
-    setValue("");
+    const message = msg.trim();
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        content: message
+      }
+    ]);
+
     setLoading(true);
+
     try {
       const res = await fetch("/api/v1/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg, sessionId: a_id }),
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message,
+          sessionId: a_id
+        })
       });
-      const data = await res.json();
-      setMessages((s) => [...s, { role: "assistant", content: JSON.stringify(data) }]);
-    } catch (e: any) {
-      setMessages((s) => [...s, { role: "assistant", content: JSON.stringify({ error: e?.message || String(e) }) }]);
+
+      const data: ApiResponse = await res.json();
+
+      if (!res.ok) {
+        throw new Error("error" in data ? data.error : "Something went wrong");
+      }
+
+
+      if (data.type === "conversation") {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            type: "conversation",
+            content: data.response
+          }
+        ]);
+
+        return;
+      }
+
+
+      if (data.type === "find-email") {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            type: "find-email",
+            content: data.query,
+            query: data.query,
+            maxResults: data.maxResults,
+            actions: data.actions
+          }
+        ]);
+
+        return;
+      }
+
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          type: "error",
+          content: "Unexpected response from server."
+        }
+      ]);
+    } catch (error: any) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          type: "error",
+          content: error?.message || "Something went wrong."
+        }
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
+
+  useEffect(() => {
+    if (!incoming || !a_id || incomingSentRef.current) {
+      return;
+    }
+
+    incomingSentRef.current = true;
+
+    const msg = decodeURIComponent(incoming);
+
+    sendMessage(msg);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incoming, a_id]);
+
+
+  const handleSend = async () => {
+    if (!value.trim() || loading) {
+      return;
+    }
+
+    const msg = value.trim();
+
+    setValue("");
+
+    await sendMessage(msg);
+  };
+
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+
+      handleSend();
+    }
+  };
+
   return (
     <div className="flex h-[80svh] w-full overflow-hidden bg-background">
-      {/* Fixed Non-Collapsible Sidebar */}
-      <aside className="w-64 border-r border-divider flex flex-col p-4 gap-4 shrink-0 bg-content1/50">
-        Chats
-        <div className="flex-1 overflow-y-auto">
-          {/* Sidebar session links or history go here */}
-          <Typography.Paragraph className="text-xs text-default-400 px-2">
+
+      <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-divider bg-content1/40">
+        <div className="px-5 py-4">
+          <Typography.Paragraph className="text-sm font-medium text-foreground">
+            Chats
+          </Typography.Paragraph>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-3">
+          <Typography.Paragraph className="px-2 py-2 text-xs text-default-400">
             Recent Chats
           </Typography.Paragraph>
         </div>
       </aside>
 
-      {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col h-full relative overflow-hidden">
-        <div className="flex-1 overflow-y-auto flex flex-col items-end justify-start px-32 pt-5 space-y-3">
-          {messages.length === 0 ? (
-            <Card
-              variant={"secondary"}
-              className={
-                "p-2 px-3 rounded-xl max-w-lg shadow-sm ring-1 ring-muted/80"
+
+      <main className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Messages */}
+
+        <div className="flex-1 overflow-y-auto px-4 pb-44 pt-6 md:px-8 lg:px-16">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+            {messages.map((item, index) => {
+
+
+              if (item.role === "user") {
+                return (
+                  <div key={index} className="flex justify-end">
+                    <Surface
+                      variant="secondary"
+                      className="max-w-[85%] rounded-2xl px-4 py-3"
+                    >
+                      <p className="whitespace-pre-wrap text-sm leading-6">
+                        {item.content}
+                      </p>
+                    </Surface>
+                  </div>
+                );
               }
-            >
-              <Card.Content>
-                <Typography.Paragraph className={"line-clamp-3 text-sm"}>
-                  Hello How are you can i help you
-                </Typography.Paragraph>
-              </Card.Content>
-            </Card>
-          ) : (
-            messages.map((m, idx) => (
-              <Card
-                key={idx}
-                variant={m.role === "assistant" ? "secondary" : undefined}
-                className={
-                  "p-2 px-3 rounded-xl max-w-lg shadow-sm ring-1 ring-muted/80"
-                }
-              >
-                <Card.Content>
-                  <Typography.Paragraph className={"text-sm"}>
-                    {m.content}
-                  </Typography.Paragraph>
-                </Card.Content>
-              </Card>
-            ))
-          )}
+
+              // ----------------------------------------
+              // EMAIL SEARCH
+              // ----------------------------------------
+
+              if (item.type === "find-email") {
+                return (
+                  <div key={index} className="flex justify-start">
+                    <Surface
+                      variant="secondary"
+                      className="w-full rounded-2xl p-4"
+                    >
+                      {JSON.stringify(item)}
+                    </Surface>
+                  </div>
+                );
+              }
+
+              // errors
+
+              if (item.type === "error") {
+                return (
+                  <div key={index} className="flex justify-start">
+                    <Surface
+                      variant="secondary"
+                      className="max-w-[85%] rounded-2xl border border-danger/20 px-4 py-3"
+                    >
+                      <p className="text-sm text-danger">{item.content}</p>
+                    </Surface>
+                  </div>
+                );
+              }
+
+              // ----------------------------------------
+              // NORMAL ASSISTANT MESSAGE
+              // ----------------------------------------
+
+              return (
+                <div key={index} className="flex justify-start">
+                  <div className="max-w-[85%] px-1 py-1">
+                    <p className="whitespace-pre-wrap text-sm leading-7 text-foreground">
+                      {item.content}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+
+
+            {loading && (
+              <div className="flex justify-start">
+                <Surface variant="secondary" className="rounded-2xl px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <ThinkingOrb state="searching" speed={1} size={20} />
+
+                    <Description>Thinking...</Description>
+                  </div>
+                </Surface>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
-        {/* Bottom Fixed Card Wrapper */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
-          <Surface
-            variant={"default"}
-            className={"rounded-3xl w-full max-w-2xl"}
-          >
-            <div className={"flex gap-2 px-4 py-2 items-center"}>
-              <ThinkingOrb state={"composing"} speed={2} size={20} />
-              <Description>Searching</Description>
-            </div>
-            <Card className="w-full max-w-2xl shadow-lg border border-divider">
-              <Card.Header className="flex flex-col h-auto">
+        {/* ------------------------------------------------ */}
+        {/* Composer */}
+        {/* ------------------------------------------------ */}
+
+        <div className="absolute inset-x-0 bottom-0 px-4 pb-4 md:px-8">
+          <div className="mx-auto w-full max-w-3xl">
+            <Surface variant={"default"} className={"rounded-3xl w-full"}>
+              <div className={"flex gap-2 px-4 py-2 items-center"}>
+                <ThinkingOrb state={"searching"} speed={1} size={20} />
+                <Description>Searching</Description>
+              </div>
+              <Card className="w-full rounded-3xl border border-divider bg-content1/95 shadow-lg backdrop-blur">
+                <Card.Header className="h-auto">
                 <textarea
                   ref={textareaRef}
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
-                  placeholder="Type your message..."
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask anything..."
                   rows={1}
-                  className="w-full text-sm resize-none overflow-hidden outline-none bg-transparent max-h-44"
+                  disabled={loading}
+                  className="max-h-44 w-full resize-none overflow-y-auto bg-transparent text-sm leading-6 outline-none placeholder:text-default-400 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-              </Card.Header>
-              <Card.Footer className="">
-                <div className="w-full flex items-center justify-between">
-                  <Button isIconOnly size="sm">
-                    <LinkTwo />
-                  </Button>
+                </Card.Header>
 
-                  <Button isIconOnly size="sm" onClick={handleSend} disabled={loading}>
-                    <ArrowUp />
-                  </Button>
-                </div>
-              </Card.Footer>
-            </Card>
-          </Surface>
+                <Card.Footer className="p-0">
+                  <div className="flex w-full items-center justify-between">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      aria-label="Attach file"
+                      disabled={loading}
+                    >
+                      <LinkTwo size={18} />
+                    </Button>
+
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      onClick={handleSend}
+                      disabled={loading || !value.trim()}
+                      aria-label="Send message"
+                    >
+                      <ArrowUp size={18} />
+                    </Button>
+                  </div>
+                </Card.Footer>
+              </Card>
+            </Surface>
+
+            <p className="mt-2 text-center text-[11px] text-default-400">
+              Enter to send · Shift + Enter for new line
+            </p>
+          </div>
         </div>
       </main>
     </div>
