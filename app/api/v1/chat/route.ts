@@ -353,26 +353,28 @@ ${userMessage}
       }
     }
 
-    const history = await loadHistoryFromDb(
-      sessionId
-    );
+    const useMemory = (body && typeof body.useMemory !== "undefined") ? Boolean(body.useMemory) : true;
 
-    const { error: userInsertError } =
-      await supabase.from("chat").insert([
-        {
-          session_id: sessionId,
-          role: "user",
-          content: {
-            text: userMessage,
+    const history = useMemory ? await loadHistoryFromDb(sessionId) : new ChatMessageHistory();
+
+    if (useMemory) {
+      const { error: userInsertError } =
+        await supabase.from("chat").insert([
+          {
+            session_id: sessionId,
+            role: "user",
+            content: {
+              text: userMessage,
+            },
           },
-        },
-      ]);
+        ]);
 
-    if (userInsertError) {
-      console.error(
-        "Failed to save user message:",
-        userInsertError
-      );
+      if (userInsertError) {
+        console.error(
+          "Failed to save user message:",
+          userInsertError
+        );
+      }
     }
 
     const prompt =
@@ -433,22 +435,24 @@ data unless the user explicitly provides that data.`,
       response?.content
     );
 
-    const { error: assistantInsertError } =
-      await supabase.from("chat").insert([
-        {
-          session_id: sessionId,
-          role: "assistant",
-          content: {
-            text: content,
+    if (useMemory) {
+      const { error: assistantInsertError } =
+        await supabase.from("chat").insert([
+          {
+            session_id: sessionId,
+            role: "assistant",
+            content: {
+              text: content,
+            },
           },
-        },
-      ]);
+        ]);
 
-    if (assistantInsertError) {
-      console.error(
-        "Failed to save assistant message:",
-        assistantInsertError
-      );
+      if (assistantInsertError) {
+        console.error(
+          "Failed to save assistant message:",
+          assistantInsertError
+        );
+      }
     }
 
     return NextResponse.json({
