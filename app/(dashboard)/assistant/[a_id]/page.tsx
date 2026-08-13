@@ -19,18 +19,18 @@ type Message = {
 
 type ApiResponse =
   | {
-  type: "conversation";
-  response: string;
-}
+      type: "conversation";
+      response: string;
+    }
   | {
-  type: "find-email";
-  query: string;
-  maxResults: number;
-  actions: string;
-}
+      type: "find-email";
+      query: string;
+      maxResults: number;
+      actions: string;
+    }
   | {
-  error: string;
-};
+      error: string;
+    };
 
 export default function Page() {
   const params = useParams();
@@ -44,9 +44,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   const incomingSentRef = useRef(false);
 
   useEffect(() => {
@@ -60,10 +58,17 @@ export default function Page() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth"
+      behavior: "smooth",
     });
   }, [messages, loading]);
 
+  /**
+   * Send message to AI.
+   *
+   * IMPORTANT:
+   * This function does NOT insert anything into Supabase.
+   * Messages only exist in React state until the page is refreshed.
+   */
   const sendMessage = async (msg: string) => {
     if (!msg.trim() || !a_id || loading) {
       return;
@@ -71,17 +76,25 @@ export default function Page() {
 
     const message = msg.trim();
 
+    /**
+     * Add user message locally only.
+     */
     setMessages((prev) => [
       ...prev,
       {
         role: "user",
-        content: message
-      }
+        content: message,
+      },
     ]);
 
     setLoading(true);
 
     try {
+      /**
+       * Get current Supabase session only for authentication.
+       *
+       * This does NOT write anything to the database.
+       */
       const {
         data: { session },
         error: sessionError,
@@ -95,6 +108,9 @@ export default function Page() {
         throw new Error("You are not authenticated.");
       }
 
+      /**
+       * Send message to your AI API.
+       */
       const res = await fetch("/api/v1/chat", {
         method: "POST",
         headers: {
@@ -103,6 +119,10 @@ export default function Page() {
         },
         body: JSON.stringify({
           message,
+
+          /**
+           * Keep your existing API contract.
+           */
           sessionId: session.user.id,
         }),
       });
@@ -110,25 +130,31 @@ export default function Page() {
       const data: ApiResponse & { emails?: any } = await res.json();
 
       if (!res.ok) {
-        throw new Error("error" in data ? (data as any).error : "Something went wrong");
+        throw new Error(
+          "error" in data ? (data as any).error : "Something went wrong",
+        );
       }
 
+      /**
+       * Normal AI conversation response.
+       */
       if (data.type === "conversation") {
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
             type: "conversation",
-            content: data.response
-          }
+            content: data.response,
+          },
         ]);
 
         return;
       }
 
+      /**
+       * Email search response.
+       */
       if (data.type === "find-email") {
-        const payloadContent = data?.emails ? { ...data, emails: (data as any).emails } : data;
-
         setMessages((prev) => [
           ...prev,
           {
@@ -139,34 +165,42 @@ export default function Page() {
             maxResults: data.maxResults,
             actions: data.actions,
             emails: (data as any).emails || undefined,
-          }
+          },
         ]);
 
         return;
       }
 
+      /**
+       * Unexpected API response.
+       */
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
           type: "error",
-          content: "Unexpected response from server."
-        }
+          content: "Unexpected response from server.",
+        },
       ]);
     } catch (error: any) {
+      const errorMessage = error?.message || "Something went wrong.";
+
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
           type: "error",
-          content: error?.message || "Something went wrong."
-        }
+          content: errorMessage,
+        },
       ]);
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Handle incoming message from URL.
+   */
   useEffect(() => {
     if (!incoming || !a_id || incomingSentRef.current) {
       return;
@@ -177,8 +211,69 @@ export default function Page() {
     const msg = decodeURIComponent(incoming);
 
     sendMessage(msg);
-
   }, [incoming, a_id]);
+
+  /**
+   * READ ONLY:
+   *
+   * Load previously stored messages.
+   *
+   * There is NO insert/update/delete here.
+   */
+  useEffect(() => {
+    if (!a_id) return;
+
+    const loadHistory = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("chat")
+          .select("role, content, created_at")
+          .eq("session_id", a_id)
+          .order("created_at", { ascending: true })
+          .limit(500);
+
+        if (error) {
+          console.error("Failed to load chat history:", error);
+          return;
+        }
+
+        if (!data) return;
+
+        const mapped = data.map((row: any) => {
+          const role = row.role === "user" ? "user" : "assistant";
+
+          const contentField = row.content;
+
+          let text = "";
+
+          if (typeof contentField === "string") {
+            text = contentField;
+          } else if (contentField && typeof contentField === "object") {
+            if (typeof contentField.text === "string") {
+              text = contentField.text;
+            } else {
+              try {
+                text = JSON.stringify(contentField.text ?? contentField);
+              } catch {
+                text = String(contentField.text ?? contentField);
+              }
+            }
+          }
+
+          return {
+            role,
+            content: text,
+          } as Message;
+        });
+
+        setMessages(mapped);
+      } catch (err) {
+        console.error("Error loading history:", err);
+      }
+    };
+
+    loadHistory();
+  }, [a_id]);
 
   const handleSend = async () => {
     if (!value.trim() || loading) {
@@ -202,7 +297,6 @@ export default function Page() {
 
   return (
     <div className="flex h-[80svh] w-full overflow-hidden bg-background">
-
       <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-divider bg-content1/40">
         <div className="px-5 py-4">
           <Typography.Paragraph className="text-sm font-medium text-foreground">
@@ -218,12 +312,9 @@ export default function Page() {
       </aside>
 
       <main className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-        {}
-
         <div className="flex-1 overflow-y-auto px-4 pb-44 pt-6 md:px-8 lg:px-16">
           <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
             {messages.map((item, index) => {
-
               if (item.role === "user") {
                 return (
                   <div key={index} className="flex justify-end">
@@ -246,8 +337,7 @@ export default function Page() {
                       variant="secondary"
                       className="w-full rounded-2xl p-4"
                     >
-                      {JSON.stringify(item.emails)}
-                      {}
+                      {JSON.stringify(item)}
                     </Surface>
                   </div>
                 );
@@ -289,33 +379,39 @@ export default function Page() {
               </div>
             )}
 
+            {messages.length == 0 && (
+              <div className="flex justify-end items-center gap-2">
+                <ThinkingOrb state={"connecting"} size={20} />
+
+                <Description>Wait for previous messages...</Description>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
         </div>
 
-        {}
-        {}
-        {}
-
-        <div className="absolute inset-x-0 bottom-0 px-4 pb-4 md:px-8">
+        <div className="absolute inset-x-0 bottom-0 px-4 pb-0 md:px-8 bg-background w-4xl">
           <div className="mx-auto w-full max-w-3xl">
             <Surface variant={"default"} className={"rounded-3xl w-full"}>
               <div className={"flex gap-2 px-4 py-2 items-center"}>
                 <ThinkingOrb state={"searching"} speed={1} size={20} />
+
                 <Description>Searching</Description>
               </div>
+
               <Card className="w-full rounded-3xl border border-divider bg-content1/95 shadow-lg backdrop-blur">
                 <Card.Header className="h-auto">
-                <textarea
-                  ref={textareaRef}
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Ask anything..."
-                  rows={1}
-                  disabled={loading}
-                  className="max-h-44 w-full resize-none overflow-y-auto bg-transparent text-sm leading-6 outline-none placeholder:text-default-400 disabled:cursor-not-allowed disabled:opacity-50"
-                />
+                  <textarea
+                    ref={textareaRef}
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask anything..."
+                    rows={1}
+                    disabled={loading}
+                    className="max-h-44 w-full resize-none overflow-y-auto bg-transparent text-sm leading-6 outline-none placeholder:text-default-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
                 </Card.Header>
 
                 <Card.Footer className="p-0">
@@ -323,7 +419,7 @@ export default function Page() {
                     <Button
                       isIconOnly
                       size="sm"
-                      variant="light"
+                      variant="tertiary"
                       aria-label="Attach file"
                       disabled={loading}
                     >
@@ -353,4 +449,3 @@ export default function Page() {
     </div>
   );
 }
-
