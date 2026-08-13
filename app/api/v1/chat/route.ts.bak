@@ -1,0 +1,711 @@
+import { NextRequest, NextResponse } from "next/server";
+import { ChatGroq } from "@langchain/groq";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import { RunnableWithMessageHistory } from "@langchain/core/runnables";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
+import { SystemMessage } from "@langchain/core/messages";
+import { createClient } from "@supabase/supabase-js";
+
+/**
+ * ---------------------------------------------------------
+ * SUPABASE SERVER CLIENT
+ * ---------------------------------------------------------
+ *
+ * IMPORTANT:
+ * Do NOT use NEXT_PUBLIC_SUPABASE_ANON_KEY for backend
+ * database writes when you want the backend to persist data.
+ *
+ * Put SUPABASE_SERVICE_ROLE_KEY in .env.local
+ */
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+});
+
+/**
+ * ---------------------------------------------------------
+ * LANGCHAIN MEMORY
+ * ---------------------------------------------------------
+ */
+const messagesHistories: Record<string, ChatMessageHistory> = {};
+
+/**
+ * ---------------------------------------------------------
+ * LOAD CHAT HISTORY FROM DATABASE
+ * ---------------------------------------------------------
+ */
+const loadHistoryFromDb = async (
+  sessionId: string,
+): Promise<ChatMessageHistory> => {
+  if (messagesHistories[sessionId]) {
+    return messagesHistories[sessionId];
+  }
+
+  const history = new ChatMessageHistory();
+
+  messagesHistories[sessionId] = history;
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("chat")
+      .select("role, content, created_at")
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: true })
+      .limit(500);
+
+    if (error || !data) {
+      if (error) {
+        console.error("Failed to load history from DB:", error);
+      }
+
+      return history;
+    }
+
+    for (const row of data) {
+      const role = (row as any).role;
+      const content = (row as any).content;
+
+      const text =
+        typeof content === "string"
+          ? content
+          : content?.text || JSON.stringify(content);
+
+      try {
+        if (role === "user") {
+          await history.addUserMessage(text);
+        } else if (role === "assistant") {
+          await history.addAIMessage(text);
+        } else {
+          await history.addMessage(new SystemMessage(text));
+        }
+      } catch (error) {
+        console.warn("Failed to populate history:", sessionId, error);
+      }
+    }
+  } catch (error) {
+    console.error("Error loading history from Supabase:", error);
+  }
+
+  return history;
+};
+
+/**
+ * ---------------------------------------------------------
+ * CONTENT HELPERS
+ * ---------------------------------------------------------
+ */
+function contentToString(content: unknown): string {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .map((item) => {
+        if (typeof item === "string") {
+          return item;
+        }
+
+        if (typeof item === "object" && item !== null && "text" in item) {
+          return String((item as { text?: unknown }).text || "");
+        }
+
+        return "";
+      })
+      .join("");
+  }
+
+  return String(content ?? "");
+}
+
+/**
+ * ---------------------------------------------------------
+ * JSON RESPONSE PARSER
+ * ---------------------------------------------------------
+ */
+function parseJsonResponse(content: string) {
+  try {
+    return JSON.parse(content);
+  } catch {
+    const match = content.match(/\{[\s\S]*\}/);
+
+    if (!match) {
+      throw new Error("Invalid JSON response from classifier");
+    }
+
+    return JSON.parse(match[0]);
+  }
+}
+
+/**
+ * ---------------------------------------------------------
+ * SAVE CHAT MESSAGE
+ * ---------------------------------------------------------
+ *
+ * Database format:
+ *
+ * role: user
+ * content:
+ * {
+ *   "text": "hello"
+ * }
+ *
+ * OR
+ *
+ * role: assistant
+ * content:
+ * {
+ *   "text": "Hello, how can I help?"
+ * }
+ */
+async function saveChatMessage(
+  sessionId: string,
+  role: "user" | "assistant",
+  text: string,
+) {
+  if (!sessionId || !text.trim()) {
+    return;
+  }
+
+  const { error } = await supabaseAdmin.from("chat").insert({
+    session_id: sessionId,
+    role,
+    content: {
+      text: text.trim(),
+    },
+  });
+
+  if (error) {
+    console.error(`Failed to save ${role} message:`, error);
+
+    throw error;
+  }
+}
+
+/**
+ * ---------------------------------------------------------
+ * VALIDATE SESSION
+ * ---------------------------------------------------------
+ *
+ * chat.session_id references session.id.
+ *
+ * We also verify that the session belongs to the
+ * authenticated Supabase user.
+ */
+async function validateSession(sessionId: string, userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("session")
+    .select("id, user_id")
+    .eq("id", sessionId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to validate session:", error);
+
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * ---------------------------------------------------------
+ * LLM
+ * ---------------------------------------------------------
+ */
+const llm = new ChatGroq({
+  model: "llama-3.3-70b-versatile",
+  temperature: 0,
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+/**
+ * ---------------------------------------------------------
+ * POST
+ * ---------------------------------------------------------
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    const message = body?.message;
+    const sessionId = body?.sessionId;
+
+    /**
+     * -----------------------------------------------------
+     * VALIDATE INPUT
+     * -----------------------------------------------------
+     */
+    if (typeof message !== "string" || !message.trim()) {
+      return NextResponse.json(
+        {
+          error: "Message is required",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (typeof sessionId !== "string" || !sessionId.trim()) {
+      return NextResponse.json(
+        {
+          error: "sessionId is required",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const userMessage = message.trim();
+
+    /**
+     * -----------------------------------------------------
+     * AUTHENTICATE USER
+     * -----------------------------------------------------
+     *
+     * Get the Supabase access token from the request.
+     */
+    const authHeader = req.headers.get("authorization");
+
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json(
+        {
+          error: "Missing authorization token",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    const accessToken = authHeader.replace("Bearer ", "").trim();
+
+    /**
+     * Verify the JWT with Supabase.
+     */
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAdmin.auth.getUser(accessToken);
+
+    if (userError || !user) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    /**
+     * -----------------------------------------------------
+     * VALIDATE CHAT SESSION
+     * -----------------------------------------------------
+     *
+     * sessionId must be public.session.id.
+     */
+    const session = await validateSession(sessionId, user.id);
+
+    if (!session) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid session or session does not belong to the authenticated user.",
+        },
+        {
+          status: 403,
+        },
+      );
+    }
+
+    /**
+     * -----------------------------------------------------
+     * SAVE USER MESSAGE
+     * -----------------------------------------------------
+     *
+     * Backend only.
+     *
+     * Database:
+     *
+     * role = user
+     * content = {"text":"hello"}
+     */
+    try {
+      await saveChatMessage(sessionId, "user", userMessage);
+    } catch {
+      return NextResponse.json(
+        {
+          error: "Failed to save user message",
+        },
+        {
+          status: 500,
+        },
+      );
+    }
+
+    /**
+     * -----------------------------------------------------
+     * CLASSIFIER
+     * -----------------------------------------------------
+     */
+    const classifierResponse = await llm.invoke(`
+You are an AI request classifier.
+
+Classify the user's request into exactly one of these types:
+
+1. find-email
+2. conversation
+
+Use "find-email" when the user wants to:
+- find emails
+- search emails
+- show emails
+- list emails
+- get emails
+- find unread emails
+- find emails from someone
+- find emails to someone
+- find emails with a subject
+- find emails with attachments
+- search Gmail
+- search their inbox
+- retrieve matching emails
+
+Use "conversation" for everything else.
+
+For find-email requests, convert the user's request
+into a valid Gmail search query.
+
+Supported Gmail operators:
+
+is:read
+is:unread
+from:email@example.com
+to:email@example.com
+cc:email@example.com
+subject:invoice
+has:attachment
+filename:pdf
+in:inbox
+is:starred
+is:important
+newer_than:7d
+older_than:30d
+after:2026/01/01
+before:2026/08/01
+
+Examples:
+
+User:
+Show unread emails
+
+Result:
+{
+  "type": "find-email",
+  "query": "is:unread",
+  "maxResults": 10,
+  "actions": "list_messages"
+}
+
+User:
+Show unread emails from abc@gmail.com
+
+Result:
+{
+  "type": "find-email",
+  "query": "from:abc@gmail.com is:unread",
+  "maxResults": 10,
+  "actions": "list_messages"
+}
+
+User:
+Give me emails from abc@gmail.com
+
+Result:
+{
+  "type": "find-email",
+  "query": "from:abc@gmail.com",
+  "maxResults": 10,
+  "actions": "list_messages"
+}
+
+User:
+Show emails from abc@gmail.com in my inbox
+
+Result:
+{
+  "type": "find-email",
+  "query": "from:abc@gmail.com in:inbox",
+  "maxResults": 10,
+  "actions": "list_messages"
+}
+
+User:
+Show unread PDF emails
+
+Result:
+{
+  "type": "find-email",
+  "query": "is:unread filename:pdf",
+  "maxResults": 10,
+  "actions": "list_messages"
+}
+
+For conversation requests, return:
+
+{
+  "type": "conversation"
+}
+
+IMPORTANT RULES:
+
+- Return ONLY valid JSON.
+- Do not use markdown.
+- Do not add explanations.
+- Never fetch emails.
+- Never call any API.
+- Never invent email results.
+- maxResults must always be 10 for find-email.
+- actions must always be "list_messages" for find-email.
+
+User request:
+${userMessage}
+`);
+
+    const classificationText = contentToString(
+      classifierResponse.content,
+    ).trim();
+
+    const classification = parseJsonResponse(classificationText);
+
+    /**
+     * -----------------------------------------------------
+     * FIND EMAIL
+     * -----------------------------------------------------
+     */
+    if (classification.type === "find-email") {
+      const emailQuery =
+        typeof classification.query === "string" ? classification.query : "";
+
+      const maxResults = 10;
+
+      try {
+        const emailsUrl = new URL("/api/v1/emails", req.url);
+
+        emailsUrl.searchParams.set("action", "list_messages");
+
+        emailsUrl.searchParams.set("query", emailQuery);
+
+        emailsUrl.searchParams.set("maxResults", String(maxResults));
+
+        /**
+         * IMPORTANT:
+         *
+         * The email API receives the authenticated
+         * user's ID because Gmail credentials are
+         * associated with users.
+         */
+        emailsUrl.searchParams.set("user_id", user.id);
+
+        const emailsRes = await fetch(emailsUrl.toString(), {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        const emailsData = await emailsRes.json().catch(() => null);
+
+        if (!emailsRes.ok) {
+          const errorText = "Failed to fetch emails.";
+
+          /**
+           * Save backend response to chat.
+           */
+          await saveChatMessage(sessionId, "assistant", errorText);
+
+          return NextResponse.json(
+            {
+              type: "find-email",
+              query: emailQuery,
+              maxResults,
+              actions: "list_messages",
+              error: emailsData || errorText,
+            },
+            {
+              status: emailsRes.status || 500,
+            },
+          );
+        }
+
+        /**
+         * Save the AI's generated email-search
+         * instruction to the database.
+         *
+         * Example:
+         *
+         * {
+         *   "text": "from:abc@gmail.com"
+         * }
+         */
+        await saveChatMessage(sessionId, "assistant", emailQuery);
+
+        return NextResponse.json({
+          type: "find-email",
+          query: emailQuery,
+          maxResults,
+          actions: "list_messages",
+          emails: emailsData,
+        });
+      } catch (err: any) {
+        const errorText = err?.message || "Failed to fetch emails.";
+
+        /**
+         * Save error response.
+         */
+        try {
+          await saveChatMessage(sessionId, "assistant", errorText);
+        } catch (saveError) {
+          console.error("Failed to save email error:", saveError);
+        }
+
+        return NextResponse.json(
+          {
+            type: "find-email",
+            query: emailQuery,
+            maxResults,
+            actions: "list_messages",
+            error: errorText,
+          },
+          {
+            status: 500,
+          },
+        );
+      }
+    }
+
+    /**
+     * -----------------------------------------------------
+     * CONVERSATION
+     * -----------------------------------------------------
+     */
+    const history = await loadHistoryFromDb(sessionId);
+
+    /**
+     * -----------------------------------------------------
+     * PROMPT
+     * -----------------------------------------------------
+     */
+    const prompt = ChatPromptTemplate.fromMessages([
+      [
+        "system",
+        `You are a helpful AI assistant.
+
+Respond concisely and helpfully.
+
+You have access to the previous conversation
+through the conversation history.
+
+Use the conversation history when it is relevant.
+
+Do not claim to have fetched emails or external
+data unless the user explicitly provides that data.`,
+      ],
+
+      new MessagesPlaceholder("history"),
+
+      ["human", "{input}"],
+    ]);
+
+    const chain = prompt.pipe(llm);
+
+    const conversationalChain = new RunnableWithMessageHistory({
+      runnable: chain,
+
+      getMessageHistory: (id: string) => {
+        return messagesHistories[id] || new ChatMessageHistory();
+      },
+
+      inputMessagesKey: "input",
+
+      historyMessagesKey: "history",
+    });
+
+    /**
+     * -----------------------------------------------------
+     * AI RESPONSE
+     * -----------------------------------------------------
+     */
+    const response = await conversationalChain.invoke(
+      {
+        input: userMessage,
+      },
+      {
+        configurable: {
+          sessionId,
+        },
+      },
+    );
+
+    const content = contentToString(response?.content);
+
+    /**
+     * -----------------------------------------------------
+     * SAVE ASSISTANT MESSAGE
+     * -----------------------------------------------------
+     *
+     * Database:
+     *
+     * role = assistant
+     *
+     * content =
+     * {
+     *   "text": "AI response..."
+     * }
+     */
+    try {
+      await saveChatMessage(sessionId, "assistant", content);
+    } catch (error) {
+      /**
+       * Do not fail the AI response if the DB
+       * persistence fails.
+       */
+      console.error("Failed to save assistant message:", error);
+    }
+
+    /**
+     * -----------------------------------------------------
+     * RETURN AI RESPONSE
+     * -----------------------------------------------------
+     */
+    return NextResponse.json({
+      type: "conversation",
+      response: content,
+    });
+  } catch (error: any) {
+    console.error("Chat API error:", error);
+
+    return NextResponse.json(
+      {
+        error: error?.message || "Something went wrong",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}
