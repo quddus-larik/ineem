@@ -330,14 +330,28 @@ export default function Page() {
                 );
               }
 
-              if (item.type === "find-email") {
+              if (item.type === "find-email" && item.emails.messages.length > 0) {
+                console.log(item);
                 return (
                   <div key={index} className="flex justify-start">
+
                     <Surface
                       variant="secondary"
-                      className="w-full rounded-2xl p-4"
+                      className="w-4xl rounded-2xl p-4 flex flex-row gap-1 overflow-x-auto"
                     >
-                      {JSON.stringify(item)}
+                      {
+                        item.emails.messages.map((itm, index) => (
+                          <Card key={itm.id}>
+                            <Card.Header className={"*:line-clamp-1"}>
+                              <Card.Title>{itm.subject}</Card.Title>
+                              <Card.Description>{itm.from}</Card.Description>
+                            </Card.Header>
+                            <Card.Content>
+                              <Description className={"line-clamp-1"}>{itm.snippet}</Description>
+                            </Card.Content>
+                          </Card>
+                        ))
+                      }
                     </Surface>
                   </div>
                 );
@@ -371,8 +385,7 @@ export default function Page() {
               <div className="flex justify-start">
                 <Surface variant="secondary" className="rounded-2xl px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <ThinkingOrb state="searching" speed={1} size={20} />
-
+                    <ThinkingOrb state="composing" speed={1} size={20} />
                     <Description>Thinking...</Description>
                   </div>
                 </Surface>
@@ -396,7 +409,6 @@ export default function Page() {
             <Surface variant={"default"} className={"rounded-3xl w-full"}>
               <div className={"flex gap-2 px-4 py-2 items-center"}>
                 <ThinkingOrb state={"searching"} speed={1} size={20} />
-
                 <Description>Searching</Description>
               </div>
 
