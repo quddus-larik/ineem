@@ -320,6 +320,14 @@ ${userMessage}
         const emailsData = await emailsRes.json().catch(() => null);
 
         if (!emailsRes.ok) {
+          // Save error to chat and return empty content response
+          try {
+            await saveChatMessage(sessionId, "assistant", "");
+            await saveChatMessage(sessionId, "assistant", String(emailsData || "Failed to fetch emails."));
+          } catch (saveErr) {
+            console.error("Failed to save error messages:", saveErr);
+          }
+
           return NextResponse.json(
             {
               type: "find-email",
@@ -327,19 +335,82 @@ ${userMessage}
               maxResults,
               actions: "list_messages",
               error: emailsData || "failed to fetch emails",
+              content: "",
             },
             { status: emailsRes.status || 500 }
           );
         }
 
+        // Save an initial assistant instruction with empty content
+        try {
+          await saveChatMessage(sessionId, "assistant", "");
+        } catch (saveInitError) {
+          console.error("Failed to save initial assistant instruction message:", saveInitError);
+        }
+
+        // Build a simple summary of the fetched emails for assistant content
+        let summary = "";
+
+        try {
+          if (!emailsData) {
+            summary = "No messages found.";
+          } else {
+            const messagesArray = Array.isArray(emailsData.messages)
+              ? emailsData.messages
+              : Array.isArray(emailsData)
+              ? emailsData
+              : null;
+
+            const count = messagesArray ? messagesArray.length : (emailsData.resultSizeEstimate ?? 0);
+
+            summary = `Found ${count} message${count === 1 ? "" : "s"}.`;
+
+            if (messagesArray && messagesArray.length > 0) {
+              const items = messagesArray.slice(0, 5).map((m: any, i: number) => {
+                const subject =
+                  (m.payload && Array.isArray(m.payload.headers)
+                    ? m.payload.headers.find((h: any) => h.name === "Subject")?.value
+                    : null) || m.subject || m.snippet || m.summary || "(no subject)";
+
+                return `${i + 1}. ${String(subject).trim()}`;
+              });
+
+              if (items.length) {
+                summary += "\n\n" + items.join("\n");
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Failed to build emails summary:", e);
+          summary = "Found messages (summary unavailable).";
+        }
+
+        // Save the assistant's summary to the database so frontend can fetch it from history
+        try {
+          await saveChatMessage(sessionId, "assistant", summary);
+        } catch (saveError) {
+          console.error("Failed to save assistant email summary:", saveError);
+        }
+
+        // Return the find-email response with empty content; detailed assistant content is stored in DB
         return NextResponse.json({
           type: "find-email",
           query: emailQuery,
           maxResults,
           actions: "list_messages",
+          content: "",
           emails: emailsData,
         });
       } catch (err: any) {
+        console.error("Error during find-email flow:", err);
+
+        try {
+          await saveChatMessage(sessionId, "assistant", "");
+          await saveChatMessage(sessionId, "assistant", String(err?.message || err));
+        } catch (saveErr) {
+          console.error("Failed to save catch error messages:", saveErr);
+        }
+
         return NextResponse.json(
           {
             type: "find-email",
@@ -347,6 +418,7 @@ ${userMessage}
             maxResults,
             actions: "list_messages",
             error: err?.message || String(err),
+            content: "",
           },
           { status: 500 }
         );
