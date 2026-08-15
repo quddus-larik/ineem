@@ -334,7 +334,7 @@ export default function Page() {
                 console.log(item);
                 return (
                   <div key={index} className="flex justify-start">
-
+                    <Description className={"text-accent"}>{item.content}</Description>
                     <Surface
                       variant="secondary"
                       className="w-4xl rounded-2xl p-4 flex flex-row gap-1 overflow-x-auto"
