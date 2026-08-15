@@ -1,97 +1,80 @@
+// app/components/GithubRepos.tsx (or wherever you keep this)
 "use client";
 
-import { Button } from "@heroui/react";
-import { ThemeSwitch } from "@/components/custom/switch.theme";
-import { supabase } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { handleConnectGmail } from "@/handlers/gmail.connect";
-import { useEmailStore } from "@/stores/emails.inbox";
+import { supabase } from "@/lib/supabase/client"; // adjust path to your Supabase client
+import { getGithubToken } from "@/lib/github/token";
+import { handleConnectGithub } from "@/handlers/github.connect";
+import { Button } from "@heroui/react";
 
-function Page() {
-    const [userData, setUserData] = useState<any>(null);
-    const { emails, loadingEmails, emailError, fetchEmails } = useEmailStore();
+export default function GithubRepos() {
+  const [repos, setRepos] = useState<unknown | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        async function fetchUser() {
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
-            if (user) {
-                setUserData(user);
-            }
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const {
+          data: { user },
+          error: userError
+        } = await supabase.auth.getUser();
+
+        const {
+          data: { session },
+          error: sessionError
+        } = await supabase.auth.getSession();
+        console.log("User", session);
+
+        if (userError || !user) {
+          setError(userError?.message || "Not authenticated");
+          setLoading(false);
+          return;
         }
-        fetchUser();
-    }, []);
 
-    return (
-        <div className="p-6 space-y-6 max-w-4xl mx-auto">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Button onPress={handleConnectGmail} color="primary">
-                        Connect Gmail
-                    </Button>
-                    <Button
-                        onPress={() => fetchEmails()}
-                        isLoading={loadingEmails}
-                        color="secondary"
-                        variant="flat"
-                    >
-                        Fetch Emails
-                    </Button>
-                </div>
-                <ThemeSwitch />
-            </div>
+        const githubToken = getGithubToken(user.id);
+        console.log("githubToken", githubToken);
 
-            {/* Email List Render */}
-            <div className="space-y-4">
-                <h2 className="text-xl font-bold">Unread Emails</h2>
+        if (!githubToken) {
+          setError("No GitHub token found for this user");
+          setLoading(false);
+          return;
+        }
 
-                {emailError && (
-                    <p className="text-sm text-danger">{emailError}</p>
-                )}
+        const res = await fetch('https://api.github.com/user/repos',{
+          headers: {
+            Authorization: `Bearer ${session.provider_token}`
+          }
+        });
 
-                {emails.length > 0 ? (
-                    <div className="space-y-3">
-                        {emails.map((email) => (
-                            <div
-                                key={email.id}
-                                className="p-4 border border-default-200 rounded-xl bg-content1 shadow-sm space-y-1"
-                            >
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-semibold text-medium">{email.subject}</h3>
-                                    <span className="text-xs text-default-400">{email.date}</span>
-                                </div>
-                                <p className="text-xs text-default-500">From: {email.from}</p>
-                                <p className="text-sm text-default-700 line-clamp-2">{email.snippet}</p>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    !loadingEmails && (
-                        <p className="text-sm text-default-400">
-                            No emails fetched yet. Click &quot;Fetch Emails&quot; to load messages.
-                        </p>
-                    )
-                )}
-            </div>
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`API error: ${res.status} ${text}`);
+        }
 
-            {/* Raw Email JSON Preview */}
-            <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-default-500">Raw Email JSON</h3>
-                <pre className="p-4 bg-default-100 rounded-lg text-xs overflow-x-auto max-h-60">
-                    {JSON.stringify(emails, null, 2)}
-                </pre>
-            </div>
+        const data = await res.json();
+        console.log(data);
 
-            {/* User Data Preview */}
-            <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-default-500">User Session</h3>
-                <pre className="p-4 bg-default-100 rounded-lg text-xs overflow-x-auto max-h-60">
-                    {JSON.stringify(userData, null, 2)}
-                </pre>
-            </div>
-        </div>
-    );
+        if (!cancelled) {
+          setRepos(data);
+          setLoading(false);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Unknown error");
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (<div>
+    <Button onClick={() => handleConnectGithub()}>Connect</Button>
+  </div>);
 }
-
-export default Page;
