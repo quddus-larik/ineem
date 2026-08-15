@@ -1,25 +1,28 @@
 import {
-    Book,
-    BuildingOne,
-    Grid,
-    Ticket,
-    UsersGroup,
-    ChatMessages,
-    Api,
-    AsteriskOctagon,
-    CheckSquareOne,
-    Mail
+  Book,
+  BuildingOne,
+  Grid,
+  Ticket,
+  UsersGroup,
+  ChatMessages,
+  Api,
+  AsteriskOctagon,
+  CheckSquareOne,
+  Mail,
+  Album,
+  Box,
+  LineChartSquare
 } from "@mynaui/icons-react";
 
 
 export function getMenuItems(selected?: string | null) {
 
-    return [
-        {icon: Mail, title: "Mails", url: "/emails"},
-        {icon: ChatMessages, title: "Assistance", url: "/assistant"},
-        {icon: AsteriskOctagon, title: "Automation", url: "/automations"},
-        {icon: CheckSquareOne, title: "Tasks", url: "/tasks"},
-        {icon: UsersGroup, title: "Contacts", url: "/contacts"},
-        // {icon: Ticket, title: "Expenses", url: expensesUrl},
-    ];
+  return [
+    { icon: ChatMessages, title: "Assistance", url: "/assistant" },
+    { icon: Album, title: "Repositories", url: "/repositories" },
+    // { icon: AsteriskOctagon, title: "Automation", url: "/automations" },
+    { icon: Box, title: "Activity", url: "/packages" },
+    { icon: LineChartSquare, title: "Insights", url: "/insights" },
+    // {icon: Ticket, title: "Expenses", url: expensesUrl},
+  ];
 }
