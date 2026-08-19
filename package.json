@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@bprogress/next": "^3.2.12",
+    "@google/genai": "^2.17.1",
     "@heroui/react": "^3.2.4",
     "@heroui/styles": "^3.2.4",
     "@langchain/community": "^1.1.29",
