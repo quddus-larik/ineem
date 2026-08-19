@@ -1,8 +1,12 @@
 "use client";
 
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, Button, Typography, Surface, Description } from "@heroui/react";
 import { LinkTwo, ArrowUp } from "@mynaui/icons-react";
 import { ThinkingOrb } from "thinking-orbs";
+import { RepoSelector } from "@/components/custom/repo.minor";
+import { useGithubRepoStore } from "@/stores/github.repos";
 
 const mockMessages = [
   {
@@ -35,7 +39,24 @@ const mockMessages = [
   },
 ];
 
-export default function Page() {
+function AssistantSession() {
+  const searchParams = useSearchParams();
+  const repoParam = searchParams.get("repo");
+  const messageParam = searchParams.get("message");
+  const setSelectedRepo = useGithubRepoStore((s) => s.setSelectedRepo);
+  const [input, setInput] = useState("");
+
+  useEffect(() => {
+    if (repoParam) setSelectedRepo(repoParam);
+    if (messageParam) {
+      try {
+        setInput(decodeURIComponent(messageParam));
+      } catch {
+        setInput(messageParam);
+      }
+    }
+  }, [repoParam, messageParam, setSelectedRepo]);
+
   return (
     <div className="flex h-[80svh] w-full overflow-hidden bg-background">
       <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-divider bg-content1/40">
@@ -95,8 +116,10 @@ export default function Page() {
               </div>
 
               <Card className="w-full rounded-3xl border border-divider bg-content1/95 shadow-lg backdrop-blur">
-                <Card.Header className="h-auto">
+                <Card.Header>
                   <textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask anything..."
                     rows={1}
                     className="max-h-44 w-full resize-none overflow-y-auto bg-transparent text-sm leading-6 outline-none placeholder:text-default-400 disabled:cursor-not-allowed disabled:opacity-50"
@@ -105,14 +128,17 @@ export default function Page() {
 
                 <Card.Footer className="p-0">
                   <div className="flex w-full items-center justify-between">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="tertiary"
-                      aria-label="Attach file"
-                    >
-                      <LinkTwo size={18} />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="tertiary"
+                        aria-label="Attach file"
+                      >
+                        <LinkTwo size={18} />
+                      </Button>
+                      <RepoSelector />
+                    </div>
 
                     <Button
                       isIconOnly
@@ -133,5 +159,13 @@ export default function Page() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <AssistantSession />
+    </Suspense>
   );
 }

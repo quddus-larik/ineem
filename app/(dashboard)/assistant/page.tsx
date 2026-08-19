@@ -6,11 +6,14 @@ import { Card, Button, Typography } from "@heroui/react";
 import { LinkTwo, ArrowUp, Search, List } from "@mynaui/icons-react";
 import { ThinkingOrb } from "thinking-orbs";
 import { supabase } from "@/lib/supabase/client";
+import { RepoSelector } from "@/components/custom/repo.minor";
+import { useGithubRepoStore } from "@/stores/github.repos";
 
 export default function Page() {
   const [value, setValue] = useState("");
   const textareaRef = useRef(null);
   const router = useRouter();
+  const selectedRepoId = useGithubRepoStore((s) => s.selectedRepoId);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -45,10 +48,12 @@ export default function Page() {
       }
     }
 
-    // navigate to assistant session page with message as query param
+    // navigate to assistant session page with repo and message as query params
     if (sessionId) {
-      const encoded = encodeURIComponent(value);
-      router.push(`/assistant/${sessionId}?m=${encoded}`);
+      const params = new URLSearchParams();
+      if (selectedRepoId) params.set("repo", selectedRepoId);
+      params.set("message", encodeURIComponent(value));
+      router.push(`/assistant/${sessionId}?${params.toString()}`);
     }
   };
 
@@ -78,9 +83,7 @@ export default function Page() {
         </Card.Header>
         <Card.Footer>
           <div className="w-full flex items-center justify-between">
-            <Button isIconOnly size="lg">
-              <LinkTwo />
-            </Button>
+            <RepoSelector />
 
             <Button isIconOnly size="lg" onClick={handleSend}>
               <ArrowUp />
