@@ -1,4 +1,3 @@
-// app/components/GithubRepos.tsx (or wherever you keep this)
 "use client";
 
 import { useEffect, useState } from "react";
@@ -45,7 +44,7 @@ export default function GithubRepos() {
 
         const res = await fetch('https://api.github.com/user/repos',{
           headers: {
-            Authorization: `Bearer ${session.provider_token}`
+            Authorization: `Bearer ${session?.provider_token}`
           }
         });
 
