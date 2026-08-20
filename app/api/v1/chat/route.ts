@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { ChatGroq } from "@langchain/groq";
 import {
   ChatPromptTemplate,
@@ -6,78 +6,12 @@ import {
 } from "@langchain/core/prompts";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { SystemMessage } from "@langchain/core/messages";
 import { supabase } from "@/lib/supabase/client";
+import { createSession } from "@/lib/db/chat";
+import { SupabaseChatMessageHistory } from "@/lib/langchain/supabase_chat_history";
 
-const messagesHistories: Record<string, ChatMessageHistory> = {};
-
-const loadHistoryFromDb = async (
-  sessionId: string
-): Promise<ChatMessageHistory> => {
-  if (messagesHistories[sessionId]) {
-    return messagesHistories[sessionId];
-  }
-
-  const history = new ChatMessageHistory();
-
-  messagesHistories[sessionId] = history;
-
-  try {
-    const { data, error } = await supabase
-      .from("chat")
-      .select("role, content, created_at")
-      .eq("session_id", sessionId)
-      .order("created_at", { ascending: true })
-      .limit(500);
-
-    if (error || !data) {
-      if (error) {
-        console.error(
-          "Failed to load history from DB:",
-          error
-        );
-      }
-
-      return history;
-    }
-
-    for (const row of data) {
-      const role = (row as any).role;
-      const content = (row as any).content;
-
-      const text =
-        typeof content === "string"
-          ? content
-          : content?.text ||
-          JSON.stringify(content);
-
-      try {
-        if (role === "user") {
-          await history.addUserMessage(text);
-        } else if (role === "assistant") {
-          await history.addAIMessage(text);
-        } else {
-          await history.addMessage(
-            new SystemMessage(text)
-          );
-        }
-      } catch (error) {
-        console.warn(
-          "Failed to populate history:",
-          sessionId,
-          error
-        );
-      }
-    }
-  } catch (error) {
-    console.error(
-      "Error loading history from Supabase:",
-      error
-    );
-  }
-
-  return history;
-};
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function contentToString(content: unknown): string {
   if (typeof content === "string") {
@@ -91,14 +25,8 @@ function contentToString(content: unknown): string {
           return item;
         }
 
-        if (
-          typeof item === "object" &&
-          item !== null &&
-          "text" in item
-        ) {
-          return String(
-            (item as { text?: unknown }).text || ""
-          );
+        if (typeof item === "object" && item !== null && "text" in item) {
+          return String((item as { text?: unknown }).text || "");
         }
 
         return "";
@@ -109,179 +37,156 @@ function contentToString(content: unknown): string {
   return String(content ?? "");
 }
 
-function parseJsonResponse(content: string) {
-  try {
-    return JSON.parse(content);
-  } catch {
-    const match = content.match(/\{[\s\S]*\}/);
-
-    if (!match) {
-      throw new Error(
-        "Invalid JSON response from classifier"
-      );
-    }
-
-    return JSON.parse(match[0]);
-  }
-}
-
 const llm = new ChatGroq({
-  model: "llama-3.3-70b-versatile",
+  model: "openai/gpt-oss-20b",
   temperature: 0,
-  apiKey: process.env.GROQ_API_KEY,
+  apiKey: process.env.GROQ_API_KEY!,
 });
+
+const prompt = ChatPromptTemplate.fromMessages([
+  [
+    "system",
+    `You are a helpful AI assistant.
+
+Respond concisely and helpfully.
+
+You have access to the previous conversation through the conversation history.
+
+Use the conversation history when it is relevant.
+
+Do not claim to have fetched emails or external data unless the user explicitly provides that data.`,
+  ],
+  new MessagesPlaceholder("history"),
+  ["human", "{input}"],
+]);
+
+const chain = prompt.pipe(llm);
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
     const message = body?.message;
-    const sessionId = body?.sessionId;
+    let sessionId = body?.sessionId;
+    const userId = body?.userId;
+    const useMemory =
+      body && typeof body.useMemory !== "undefined"
+        ? Boolean(body.useMemory)
+        : true;
 
-    if (
-      typeof message !== "string" ||
-      !message.trim()
-    ) {
-      return NextResponse.json(
-        {
-          error: "Message is required",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (
-      typeof sessionId !== "string" ||
-      !sessionId.trim()
-    ) {
-      return NextResponse.json(
-        {
-          error: "sessionId is required",
-        },
-        { status: 400 }
-      );
+    if (typeof message !== "string" || !message.trim()) {
+      return new Response(JSON.stringify({ error: "Message is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const userMessage = message.trim();
 
-    const useMemory = (body && typeof body.useMemory !== "undefined") ? Boolean(body.useMemory) : true;
+    // Create a session in DB if one was not provided.
+    if (typeof sessionId !== "string" || !sessionId.trim()) {
+      let uid: string | undefined = userId;
 
-    const history = useMemory ? await loadHistoryFromDb(sessionId) : new ChatMessageHistory();
+      if (!uid) {
+        const { data: userData } = await supabase.auth.getUser();
+        uid = userData?.user?.id;
+      }
 
-    if (useMemory) {
-      const { error: userInsertError } =
-        await supabase.from("chat").insert([
-          {
-            session_id: sessionId,
-            role: "user",
-            content: {
-              text: userMessage,
-            },
-          },
-        ]);
-
-      if (userInsertError) {
-        console.error(
-          "Failed to save user message:",
-          userInsertError
+      if (!uid) {
+        return new Response(
+          JSON.stringify({
+            error: "Cannot create session: missing user",
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
-    }
 
-    const prompt =
-      ChatPromptTemplate.fromMessages([
-        [
-          "system",
-          `You are a helpful AI assistant.
+      const title = userMessage.slice(0, 60) || "Chat session";
+      const newId = await createSession(uid, title);
 
-Respond concisely and helpfully.
-
-You have access to the previous conversation
-through the conversation history.
-
-Use the conversation history when it is relevant.
-
-Do not claim to have fetched emails or external
-data unless the user explicitly provides that data.`,
-        ],
-
-        new MessagesPlaceholder("history"),
-
-        ["human", "{input}"],
-      ]);
-
-    const chain = prompt.pipe(llm);
-
-    const conversationalChain =
-      new RunnableWithMessageHistory({
-        runnable: chain,
-
-        getMessageHistory: (
-          id: string
-        ) => {
-          return (
-            messagesHistories[id] ||
-            new ChatMessageHistory()
-          );
-        },
-
-        inputMessagesKey: "input",
-
-        historyMessagesKey: "history",
-      });
-
-    const response =
-      await conversationalChain.invoke(
-        {
-          input: userMessage,
-        },
-        {
-          configurable: {
-            sessionId,
-          },
-        }
-      );
-
-    const content = contentToString(
-      response?.content
-    );
-
-    if (useMemory) {
-      const { error: assistantInsertError } =
-        await supabase.from("chat").insert([
-          {
-            session_id: sessionId,
-            role: "assistant",
-            content: {
-              text: content,
-            },
-          },
-        ]);
-
-      if (assistantInsertError) {
-        console.error(
-          "Failed to save assistant message:",
-          assistantInsertError
+      if (!newId) {
+        return new Response(
+          JSON.stringify({ error: "Failed to create session" }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
         );
       }
+
+      sessionId = newId;
     }
 
-    return NextResponse.json({
-      type: "conversation",
-      response: content,
+    // Session-scoped, DB-backed history is the single source of truth.
+    // RunnableWithMessageHistory persists the user + assistant messages
+    // to the `chat` table automatically via SupabaseChatMessageHistory.
+    const conversationalChain = new RunnableWithMessageHistory({
+      runnable: chain,
+
+      getMessageHistory: (id: string) =>
+        useMemory
+          ? new SupabaseChatMessageHistory(id)
+          : new ChatMessageHistory(),
+
+      inputMessagesKey: "input",
+
+      historyMessagesKey: "history",
     });
-  } catch (error: any) {
+
+    const encoder = new TextEncoder();
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (event: string, data: unknown) => {
+          controller.enqueue(
+            encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+          );
+        };
+
+        // Tell the client which session is being used (handy when we
+        // just created one).
+        send("session", { sessionId });
+
+        try {
+          let full = "";
+
+          const llmStream = await conversationalChain.stream(
+            { input: userMessage },
+            { configurable: { sessionId } }
+          );
+
+          for await (const chunk of llmStream) {
+            const token = contentToString(chunk?.content);
+
+            if (token) {
+              full += token;
+              send("token", { token });
+            }
+          }
+
+          send("done", { sessionId, response: full });
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : "Stream failed";
+          console.error("Stream error:", error);
+          send("error", { error: message });
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Session-Id": String(sessionId),
+      },
+    });
+  } catch (error) {
     console.error("Chat API error:", error);
 
-    return NextResponse.json(
-      {
-        error:
-          error?.message ||
-          "Something went wrong",
-      },
-      {
-        status: 500,
-      }
+    return new Response(
+      JSON.stringify({ error: error?.message || "Something went wrong" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }

@@ -6,6 +6,7 @@ import { Card, Button, Typography } from "@heroui/react";
 import { LinkTwo, ArrowUp, Search, List } from "@mynaui/icons-react";
 import { ThinkingOrb } from "thinking-orbs";
 import { supabase } from "@/lib/supabase/client";
+import { createSession } from "@/lib/db/chat";
 import { RepoSelector } from "@/components/custom/repo.minor";
 import { useGithubRepoStore } from "@/stores/github.repos";
 
@@ -26,34 +27,30 @@ export default function Page() {
   const handleSend = async () => {
     if (!value || !value.trim()) return;
 
-    // get existing session id from localStorage
-    let sessionId = localStorage.getItem("chat_session_id");
-
-    // create session if missing
-    if (!sessionId) {
-      try {
-        const { data: userData, error: userErr } = await supabase.auth.getUser();
-        if (userErr || !userData?.user) {
-          console.error("No authenticated user to create session", userErr);
-        } else {
-          const userId = userData.user.id;
-          const title = value.slice(0, 60) || "Chat session";
-          const { data, error } = await supabase.from("session").insert({ user_id: userId, title }).select("id").single();
-          if (error) throw error;
-          sessionId = data.id;
-          localStorage.setItem("chat_session_id", sessionId);
-        }
-      } catch (err) {
-        console.error("Failed to create session:", err);
+    try {
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData?.user) {
+        console.error("No authenticated user to create session", userErr);
+        return;
       }
-    }
 
-    // navigate to assistant session page with repo and message as query params
-    if (sessionId) {
+      const userId = userData.user.id;
+      const title = value.slice(0, 60) || "New chat";
+
+      // Create a fresh, empty session and navigate to it.
+      const sessionId = await createSession(userId, title);
+      if (!sessionId) {
+        console.error("Failed to create session");
+        return;
+      }
+
       const params = new URLSearchParams();
       if (selectedRepoId) params.set("repo", selectedRepoId);
       params.set("message", encodeURIComponent(value));
+
       router.push(`/assistant/${sessionId}?${params.toString()}`);
+    } catch (err) {
+      console.error("Failed to create session:", err);
     }
   };
 
