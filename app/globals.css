@@ -155,7 +155,7 @@ body {
     @apply text-sm leading-5 text-gray-500;
   }
   .hover-ring {
-    @apply ring-0 hover:ring-2 ring-accent transition-all active:ring-0;
+    @apply ring-0 hover:ring-2 ring-accent transition-all active:ring-0 cursor-pointer p-3;
   }
   .button--tertiary {
     @apply text-default-foreground;
