@@ -1,1 +1,0 @@
-copilot --resume=e39faa23-6394-47ce-a9c5-215da487b37d
