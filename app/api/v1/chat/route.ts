@@ -222,9 +222,9 @@ export async function POST(request: NextRequest) {
 
         const {
             data: userGithubToken,
-            errors
+            error: userGithubTokenError,
         } = await supabase.from("users").select("github_access_token").eq("id", user.id).single();
-        if (!errors) {
+        if (!userGithubTokenError) {
             console.log(userGithubToken);
         }
 
