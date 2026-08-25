@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { Button, Surface, ScrollShadow } from "@heroui/react";
-import { EditOne, Search, File, Album, User, CogTwo, Send } from "@mynaui/icons-react";
-import { handleLoginGithub } from "@/handlers/github.oauth";
+import {useState, useRef, useEffect} from "react";
+import {useParams} from "next/navigation";
+import {Button, Surface, ScrollShadow} from "@heroui/react";
+import {EditOne, Search, File, Album, User, CogTwo, Send} from "@mynaui/icons-react";
+import {handleLoginGithub} from "@/handlers/github.oauth";
 import {supabase} from "@/lib/supabase/client";
 
 interface Message {
@@ -22,27 +22,40 @@ export default function Home() {
     const [isLoading, setIsLoading] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const [userData,setUserData] = useState<{ id?: string } | null>(null);
+    const [userData, setUserData] = useState<{ id?: string } | null>(null);
+    const [userSession, setUserSession] = useState<string>("");
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
     };
 
     useEffect(() => {
-        (async ()=>{
-            const {data: { user },error} = await supabase.auth.getUser();
-            if(!error){
+        (async () => {
+            const {data: {user}, error} = await supabase.auth.getUser();
+            if (!error) {
                 setUserData(user);
+            }
+            const {
+                data: { session },
+                error: sessionIdError
+            } = await supabase.auth.getSession();
+            console.log("user session", session);
+            if (!sessionIdError && session?.provider_token) {
+                setUserSession(session.provider_token);
             }
         })()
     }, []);
+
+    useEffect(() => {
+        console.log("user session updated", userSession);
+    }, [userSession]);
 
     useEffect(() => {
         if (!id) return;
         setSessionId(id);
 
         (async () => {
-            const { data: session } = await supabase
+            const {data: session} = await supabase
                 .from("session")
                 .select("id")
                 .eq("id", id)
@@ -50,11 +63,11 @@ export default function Home() {
 
             if (!session) return;
 
-            const { data: history } = await supabase
+            const {data: history} = await supabase
                 .from("chat")
                 .select("role, content")
                 .eq("session_id", id)
-                .order("created_at", { ascending: true });
+                .order("created_at", {ascending: true});
 
             if (history) {
                 setMessages(
@@ -79,13 +92,13 @@ export default function Home() {
         setInput("");
         setIsLoading(true);
 
-        setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+        setMessages((prev) => [...prev, {role: "user", content: userMessage}]);
 
         try {
             const res = await fetch("/api/v1/chat", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userMessage, sessionId, user: userData }),
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({message: userMessage, sessionId, user: userData, token: userSession}),
             });
 
             const data = await res.json();
@@ -94,13 +107,13 @@ export default function Home() {
                 throw new Error(data.error || "Failed to send message");
             }
 
-            setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
+            setMessages((prev) => [...prev, {role: "assistant", content: data.message}]);
             if (data.sessionId) setSessionId(data.sessionId);
         } catch (error) {
             console.error("Chat error:", error);
             setMessages((prev) => [
                 ...prev,
-                { role: "assistant", content: "Something went wrong. Please try again." },
+                {role: "assistant", content: "Something went wrong. Please try again."},
             ]);
         } finally {
             setIsLoading(false);
@@ -126,14 +139,14 @@ export default function Home() {
         <div className="flex h-svh bg-background">
             <div className="flex flex-col gap-2 justify-between p-3 *:flex *:flex-col *:gap-2">
                 <div>
-                    <Button isIconOnly size="sm"><EditOne /></Button>
-                    <Button isIconOnly size="sm"><Search /></Button>
-                    <Button isIconOnly size="sm"><File /></Button>
-                    <Button isIconOnly size="sm"><Album /></Button>
+                    <Button isIconOnly size="sm"><EditOne/></Button>
+                    <Button isIconOnly size="sm"><Search/></Button>
+                    <Button isIconOnly size="sm"><File/></Button>
+                    <Button isIconOnly size="sm"><Album/></Button>
                 </div>
                 <div>
-                    <Button isIconOnly size="sm"><CogTwo /></Button>
-                    <Button isIconOnly size="sm" onClick={handleLoginGithub}><User /></Button>
+                    <Button isIconOnly size="sm"><CogTwo/></Button>
+                    <Button isIconOnly size="sm" onClick={handleLoginGithub}><User/></Button>
                 </div>
             </div>
             <div className="w-full flex-1 flex flex-col overflow-hidden">
@@ -149,7 +162,7 @@ export default function Home() {
                             </Surface>
                         </div>
                     ))}
-                    <div ref={messagesEndRef} />
+                    <div ref={messagesEndRef}/>
                 </ScrollShadow>
 
                 {/* Input Area */}
@@ -164,7 +177,7 @@ export default function Home() {
                 onKeyDown={handleKeyDown}
                 disabled={isLoading}
                 className="w-full resize-none bg-transparent text-sm focus:outline-none max-h-48"
-                style={{ height: "auto" }}
+                style={{height: "auto"}}
             />
                         <Button
                             isIconOnly
@@ -173,7 +186,7 @@ export default function Home() {
                             isDisabled={!input.trim() || isLoading}
                             className="ms-auto"
                         >
-                            <Send />
+                            <Send/>
                         </Button>
                     </Surface>
                 </div>

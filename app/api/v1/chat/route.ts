@@ -31,6 +31,10 @@ const StateAnnotation = Annotation.Root({
         reducer: (_x, y) => y,
         default: () => "",
     }),
+    githubToken: Annotation<string>({
+        reducer: (_x, y) => y,
+        default: () => "",
+    }),
 });
 
 const model = new ChatGroq({
@@ -171,7 +175,7 @@ async function searchRepo(state: typeof StateAnnotation.State) {
     const response = await fetch(GithubUrl, {
         headers: {
             Accept: "application/vnd.github+json",
-            Authorization: `Bearer {token}`,
+            Authorization: `Bearer ${state.githubToken}`,
             "X-GitHub-Api-Version": "2022-11-28",
         },
     });
@@ -217,15 +221,11 @@ export async function POST(request: NextRequest) {
     try {
 
         const body = await request.json();
-        const {message, sessionId, user} = body;
+        const {message, sessionId, user, token} = body;
         const username: string = user?.user_metadata?.user_name ?? "";
 
-        const {
-            data: userGithubToken,
-            error: userGithubTokenError,
-        } = await supabase.from("users").select("github_access_token").eq("id", user.id).single();
-        if (!userGithubTokenError) {
-            console.log(userGithubToken);
+        if (process.env.NODE_ENV === "development") {
+            console.log("GitHub Access Token:", token);
         }
 
         if (!message) {
@@ -281,7 +281,7 @@ export async function POST(request: NextRequest) {
 
         messages.push(new HumanMessage(message));
 
-        const result = await app.invoke({messages, username});
+        const result = await app.invoke({messages, username, githubToken: token});
         const aiResponse = result.messages.at(-1)?.content as string;
         const searchQuery = result.searchResult?.query ?? null;
 
