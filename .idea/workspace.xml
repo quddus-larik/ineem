@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="67734b03-c85f-4398-becb-54ef2f866164" name="Changes" comment="reset the code">
+      <change afterPath="$PROJECT_DIR$/app/api/v1/chat/route.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/supabase/client.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+        <option value="TypeScript JSX File" />
+        <option value="TypeScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/app/api/v1/chat/route.ts" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.000076271747132" />
+      <entry key="S2" value="1.256040910051857" />
+      <entry key="S5" value="2.892033669687445" />
+      <entry key="S10" value="6.2102565938015175" />
+      <entry key="S30" value="17.640254396720454" />
+      <entry key="S60" value="28.86070317531197" />
+      <entry key="M2" value="42.82053495086836" />
+      <entry key="M5" value="64.40440738941666" />
+      <entry key="M10" value="89.3510383443722" />
+      <entry key="M15" value="113.4747983103201" />
+      <entry key="M30" value="178.73762024647158" />
+      <entry key="H1" value="271.5628492515682" />
+      <entry key="H2" value="404.13702980516314" />
+      <entry key="H4" value="632.564473694293" />
+      <entry key="D1" value="1920.948013002467" />
+      <entry key="W1" value="2798.170272929546" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="5.92296174748791E-163" />
+      <entry key="S5" value="1.6891952509004184E-65" />
+      <entry key="S10" value="6.70711452944031E-33" />
+      <entry key="S30" value="4.446620242649325E-11" />
+      <entry key="S60" value="1.320787190377197E-5" />
+      <entry key="M2" value="0.007362393982910028" />
+      <entry key="M5" value="0.436520612838746" />
+      <entry key="M10" value="2.7178855649703446" />
+      <entry key="M15" value="6.121170742171866" />
+      <entry key="M30" value="17.658081162214405" />
+      <entry key="H1" value="36.57505479479394" />
+      <entry key="H2" value="63.459540100936856" />
+      <entry key="H4" value="107.24174916431097" />
+      <entry key="D1" value="387.2872741640982" />
+      <entry key="W1" value="593.5636993312837" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9659363289248456" />
+      <entry key="MS500" value="0.9931681044315481" />
+      <entry key="S2" value="1.2538041465188328" />
+      <entry key="S5" value="2.889728327071008" />
+      <entry key="S10" value="6.207119581528704" />
+      <entry key="S30" value="17.636715653902375" />
+      <entry key="S60" value="28.857738090354925" />
+      <entry key="M2" value="42.82213321133913" />
+      <entry key="M5" value="64.81089996193336" />
+      <entry key="M10" value="92.00730603748539" />
+      <entry key="M15" value="119.51737873285994" />
+      <entry key="M30" value="196.30242498396663" />
+      <entry key="H1" value="308.0529758198432" />
+      <entry key="H2" value="467.52974873336524" />
+      <entry key="H4" value="739.754076214344" />
+      <entry key="D1" value="2308.2063988984096" />
+      <entry key="W1" value="3391.727714409727" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;5e55e0ff&quot;,
+  &quot;associatedIndex&quot;: 0,
+  &quot;fromUser&quot;: true
+}</component>
+  <component name="ProjectId" id="3HaTM3E4EcB7t8l2zponx8xjy1S" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Git.Working.Tree.Tab.closed.by.user": "closed",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Node.js.backend > agents.ts.executor": "Run",
+    "Node.js.embedding.service.js.executor": "Run",
+    "Node.js.graph.ts.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "deletionFromPopupRequiresConfirmation": "false",
+    "git-widget-placeholder": "main",
+    "javascript.preferred.runtime.type.id": "node",
+    "js.debugger.nextJs.config.created.client": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "D:/ineem/app",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.jshint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.jshint": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "pnpm",
+    "npm.dev.executor": "Run",
+    "npm.start.executor": "Run",
+    "prettierjs.PrettierConfiguration.Package": "D:\\ineem\\node_modules\\prettier",
+    "settings.editor.selected.configurable": "configurable.tailwindcss",
+    "to.speed.mode.migration.done": "true",
+    "ts.external.directory.path": "D:\\ineem\\node_modules\\typescript\\lib"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\ineem\app" />
+      <recent name="D:\ineem" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\ineem" />
+      <recent name="D:\ineem\lib" />
+      <recent name="D:\ineem\app\api\v1" />
+      <recent name="D:\ineem\lib\supabase" />
+      <recent name="D:\ineem\app\(auth)\auth\callback" />
+    </key>
+  </component>
+  <component name="RunManager" selected="npm.dev">
+    <configuration name="Next.js: debug client-side" type="JavascriptDebugType" uri="http://localhost:3000/">
+      <method v="2" />
+    </configuration>
+    <configuration name="Next.js: debug client-side" type="JavascriptDebugType" uri="http://localhost:3000/">
+      <method v="2" />
+    </configuration>
+    <configuration name="dev" type="js.build_tools.npm" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="start" type="js.build_tools.npm" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="start" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="JavaScript Debug.Next.js: debug client-side" />
+      <item itemvalue="npm.start" />
+      <item itemvalue="npm.dev" />
+    </list>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-WS-262.9437.145" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="67734b03-c85f-4398-becb-54ef2f866164" name="Changes" comment="" />
+      <created>1786105129128</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1786105129128</updated>
+      <workItem from="1786105130431" duration="21626000" />
+      <workItem from="1786172399247" duration="7981000" />
+      <workItem from="1786205373640" duration="2447000" />
+      <workItem from="1786207876812" duration="7352000" />
+      <workItem from="1786253447800" duration="14265000" />
+      <workItem from="1786348727654" duration="2306000" />
+      <workItem from="1786351333610" duration="13021000" />
+      <workItem from="1786453443655" duration="10831000" />
+      <workItem from="1786521646377" duration="9563000" />
+      <workItem from="1786534091414" duration="8632000" />
+      <workItem from="1786620101859" duration="2843000" />
+      <workItem from="1786644611706" duration="4620000" />
+      <workItem from="1786722443739" duration="591000" />
+      <workItem from="1786727422132" duration="6616000" />
+      <workItem from="1786780795751" duration="14102000" />
+      <workItem from="1786797544828" duration="4197000" />
+      <workItem from="1786808233362" duration="673000" />
+      <workItem from="1786809183102" duration="3616000" />
+      <workItem from="1786870171676" duration="169000" />
+      <workItem from="1786950587440" duration="2040000" />
+      <workItem from="1787128986629" duration="1863000" />
+      <workItem from="1787132086381" duration="3091000" />
+      <workItem from="1787135275111" duration="718000" />
+      <workItem from="1787136048692" duration="303000" />
+      <workItem from="1787136408083" duration="6632000" />
+      <workItem from="1787219781546" duration="1513000" />
+      <workItem from="1787225605456" duration="7923000" />
+      <workItem from="1787298725072" duration="2086000" />
+      <workItem from="1787304260721" duration="5124000" />
+      <workItem from="1787382788978" duration="587000" />
+      <workItem from="1787477828604" duration="5125000" />
+      <workItem from="1787492435194" duration="1533000" />
+      <workItem from="1787548156518" duration="6170000" />
+      <workItem from="1787581216173" duration="1816000" />
+      <workItem from="1787584088657" duration="1582000" />
+      <workItem from="1787590843286" duration="3699000" />
+      <workItem from="1787594633645" duration="1315000" />
+    </task>
+    <task id="LOCAL-00013" summary="initialize the nextjs project">
+      <option name="closed" value="true" />
+      <created>1786208715074</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1786208715074</updated>
+    </task>
+    <task id="LOCAL-00014" summary="add email connector and its connections">
+      <option name="closed" value="true" />
+      <created>1786214469919</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1786214469919</updated>
+    </task>
+    <task id="LOCAL-00015" summary="refine UI and import Lyouts">
+      <option name="closed" value="true" />
+      <created>1786215338506</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1786215338506</updated>
+    </task>
+    <task id="LOCAL-00016" summary="chore: UI for inpbox! &quot;emails&quot;">
+      <option name="closed" value="true" />
+      <created>1786266466243</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1786266466243</updated>
+    </task>
+    <task id="LOCAL-00017" summary="chore: UI and micro animations">
+      <option name="closed" value="true" />
+      <created>1786267863422</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1786267863422</updated>
+    </task>
+    <task id="LOCAL-00018" summary="chore: add pagination UI components">
+      <option name="closed" value="true" />
+      <created>1786358599920</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1786358599920</updated>
+    </task>
+    <task id="LOCAL-00019" summary="chore: refactor UI layouts">
+      <option name="closed" value="true" />
+      <created>1786358616180</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1786358616180</updated>
+    </task>
+    <task id="LOCAL-00020" summary="chore: agentic AI Chatbot UI">
+      <option name="closed" value="true" />
+      <created>1786358642747</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1786358642747</updated>
+    </task>
+    <task id="LOCAL-00021" summary="pkg: Thinking orbs">
+      <option name="closed" value="true" />
+      <created>1786358659605</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1786358659605</updated>
+    </task>
+    <task id="LOCAL-00022" summary="fix: pagination caching system">
+      <option name="closed" value="true" />
+      <created>1786362859720</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1786362859720</updated>
+    </task>
+    <task id="LOCAL-00023" summary="chore: update UI and replies features">
+      <option name="closed" value="true" />
+      <created>1786367474594</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1786367474594</updated>
+    </task>
+    <task id="LOCAL-00024" summary="create: webhook for catch the email recieved to loged it user">
+      <option name="closed" value="true" />
+      <created>1786367553659</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1786367553659</updated>
+    </task>
+    <task id="LOCAL-00025" summary="chore: add route for AI LLM reponses">
+      <option name="closed" value="true" />
+      <created>1786464472146</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1786464472146</updated>
+    </task>
+    <task id="LOCAL-00026" summary="chore: add messages LLM route for reponses">
+      <option name="closed" value="true" />
+      <created>1786541049452</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1786541049453</updated>
+    </task>
+    <task id="LOCAL-00027" summary="chore: route for get the email information">
+      <option name="closed" value="true" />
+      <created>1786541071211</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1786541071211</updated>
+    </task>
+    <task id="LOCAL-00028" summary="chore: add workflow in API and autorization sharing using API header for email fetching">
+      <option name="closed" value="true" />
+      <created>1786542714991</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1786542714991</updated>
+    </task>
+    <task id="LOCAL-00029" summary="test, demo for example purpose">
+      <option name="closed" value="true" />
+      <created>1786542741142</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1786542741142</updated>
+    </task>
+    <task id="LOCAL-00030" summary="chore: update UI">
+      <option name="closed" value="true" />
+      <created>1786647014245</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1786647014246</updated>
+    </task>
+    <task id="LOCAL-00031" summary="chore: add memory for Agents">
+      <option name="closed" value="true" />
+      <created>1786647039380</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1786647039380</updated>
+    </task>
+    <task id="LOCAL-00032" summary="chore: remove Fab Button">
+      <option name="closed" value="true" />
+      <created>1786647065016</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1786647065016</updated>
+    </task>
+    <task id="LOCAL-00033" summary="chore: refactor layout">
+      <option name="closed" value="true" />
+      <created>1786647244232</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1786647244232</updated>
+    </task>
+    <task id="LOCAL-00034" summary="chore: remove the db insertion">
+      <option name="closed" value="true" />
+      <created>1786649223642</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1786649223643</updated>
+    </task>
+    <task id="LOCAL-00035" summary="chore: reafctor code">
+      <option name="closed" value="true" />
+      <created>1786649253071</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1786649253071</updated>
+    </task>
+    <task id="LOCAL-00036" summary="chore: update messages UI for emails preview">
+      <option name="closed" value="true" />
+      <created>1786728703047</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1786728703047</updated>
+    </task>
+    <task id="LOCAL-00037" summary="chore: remove the email logic">
+      <option name="closed" value="true" />
+      <created>1786785758058</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1786785758059</updated>
+    </task>
+    <task id="LOCAL-00038" summary="chore: update to Github specific Tabs">
+      <option name="closed" value="true" />
+      <created>1786812566861</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1786812566861</updated>
+    </task>
+    <task id="LOCAL-00039" summary="chore: remove email logic">
+      <option name="closed" value="true" />
+      <created>1786812597951</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1786812597951</updated>
+    </task>
+    <task id="LOCAL-00040" summary="chore: update to github connector">
+      <option name="closed" value="true" />
+      <created>1786812617898</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1786812617898</updated>
+    </task>
+    <task id="LOCAL-00041" summary="chore: remove unwanted files">
+      <option name="closed" value="true" />
+      <created>1786812639077</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1786812639077</updated>
+    </task>
+    <task id="LOCAL-00042" summary="chore: remove gamil features">
+      <option name="closed" value="true" />
+      <created>1786812705634</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1786812705634</updated>
+    </task>
+    <task id="LOCAL-00043" summary="chore: additional deps">
+      <option name="closed" value="true" />
+      <created>1786812728410</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1786812728410</updated>
+    </task>
+    <task id="LOCAL-00044" summary="chore: remove email supported files">
+      <option name="closed" value="true" />
+      <created>1786812759212</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1786812759212</updated>
+    </task>
+    <task id="LOCAL-00045" summary="chore: add utils files for github and nextjs">
+      <option name="closed" value="true" />
+      <created>1786812782784</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1786812782784</updated>
+    </task>
+    <task id="LOCAL-00046" summary="chore: connection for repositories">
+      <option name="closed" value="true" />
+      <created>1786812810681</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1786812810681</updated>
+    </task>
+    <task id="LOCAL-00047" summary="chore: update token usage for github">
+      <option name="closed" value="true" />
+      <created>1787142944510</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1787142944510</updated>
+    </task>
+    <task id="LOCAL-00048" summary="chore: update token usage for github">
+      <option name="closed" value="true" />
+      <created>1787142971678</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1787142971678</updated>
+    </task>
+    <task id="LOCAL-00049" summary="chore: fetch repos on first load">
+      <option name="closed" value="true" />
+      <created>1787142993387</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1787142993387</updated>
+    </task>
+    <task id="LOCAL-00050" summary="chore: add required deps">
+      <option name="closed" value="true" />
+      <created>1787143015723</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1787143015724</updated>
+    </task>
+    <task id="LOCAL-00051" summary="chore: add ingestion for embeddings">
+      <option name="closed" value="true" />
+      <created>1787143059401</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1787143059401</updated>
+    </task>
+    <task id="LOCAL-00052" summary="chore: centralized store for repositories">
+      <option name="closed" value="true" />
+      <created>1787143080022</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1787143080023</updated>
+    </task>
+    <task id="LOCAL-00053" summary="chore: add connection with simple LLM chatbot with consistent history">
+      <option name="closed" value="true" />
+      <created>1787231923418</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1787231923419</updated>
+    </task>
+    <task id="LOCAL-00054" summary="chore: update code and mock repos">
+      <option name="closed" value="true" />
+      <created>1787235380855</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1787235380855</updated>
+    </task>
+    <task id="LOCAL-00055" summary="chore: update UI for repositories">
+      <option name="closed" value="true" />
+      <created>1787300810643</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1787300810645</updated>
+    </task>
+    <task id="LOCAL-00056" summary="chore: reusable function for Repo Details">
+      <option name="closed" value="true" />
+      <created>1787482898114</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1787482898115</updated>
+    </task>
+    <task id="LOCAL-00057" summary="chore: UI for PRs and other content">
+      <option name="closed" value="true" />
+      <created>1787482940965</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1787482940965</updated>
+    </task>
+    <task id="LOCAL-00058" summary="chore: update tailwindcss">
+      <option name="closed" value="true" />
+      <created>1787482973740</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1787482973740</updated>
+    </task>
+    <task id="LOCAL-00059" summary="refactor UI and db">
+      <option name="closed" value="true" />
+      <created>1787482997458</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1787482997459</updated>
+    </task>
+    <task id="LOCAL-00060" summary="refactor UI review connection">
+      <option name="closed" value="true" />
+      <created>1787585609005</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1787585609006</updated>
+    </task>
+    <task id="LOCAL-00061" summary="reset the code">
+      <option name="closed" value="true" />
+      <created>1787592126998</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1787592126999</updated>
+    </task>
+    <option name="localTasksCounter" value="62" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <MESSAGE value="chore: update messages UI for emails preview" />
+    <MESSAGE value="chore: remove the email logic" />
+    <MESSAGE value="chore: update to Github specific Tabs" />
+    <MESSAGE value="chore: remove email logic" />
+    <MESSAGE value="chore: update to github connector" />
+    <MESSAGE value="chore: remove unwanted files" />
+    <MESSAGE value="chore: remove gamil features" />
+    <MESSAGE value="chore: additional deps" />
+    <MESSAGE value="chore: remove email supported files" />
+    <MESSAGE value="chore: add utils files for github and nextjs" />
+    <MESSAGE value="chore: connection for repositories" />
+    <MESSAGE value="chore: update token usage for github" />
+    <MESSAGE value="chore: fetch repos on first load" />
+    <MESSAGE value="chore: add required deps" />
+    <MESSAGE value="chore: add ingestion for embeddings" />
+    <MESSAGE value="chore: centralized store for repositories" />
+    <MESSAGE value="chore: add connection with simple LLM chatbot with consistent history" />
+    <MESSAGE value="chore: update code and mock repos" />
+    <MESSAGE value="chore: update UI for repositories" />
+    <MESSAGE value="chore: reusable function for Repo Details" />
+    <MESSAGE value="chore: UI for PRs and other content" />
+    <MESSAGE value="chore: update tailwindcss" />
+    <MESSAGE value="refactor UI and db" />
+    <MESSAGE value="refactor UI review connection" />
+    <MESSAGE value="reset the code" />
+    <option name="LAST_COMMIT_MESSAGE" value="reset the code" />
+  </component>
+</project>

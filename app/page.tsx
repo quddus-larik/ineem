@@ -1,79 +1,60 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase/client"; // adjust path to your Supabase client
-import { getGithubToken } from "@/lib/github/token";
-import { handleConnectGithub } from "@/handlers/github.connect";
-import { Button } from "@heroui/react";
+import {Button, Surface} from "@heroui/react";
+import {EditOne, Search, File, Album, User, CogTwo } from "@mynaui/icons-react"
 
-export default function GithubRepos() {
-  const [repos, setRepos] = useState<unknown | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function Home() {
+    return (
+        <div className={"flex h-svh bg-background"}>
+            <div className={"flex flex-col gap-2 justify-between p-3 *:flex *:flex-col *:gap-2"}>
+                <div>
+                    <Button isIconOnly size={"sm"}><EditOne/></Button>
+                    <Button isIconOnly size={"sm"}><Search/></Button>
+                    <Button isIconOnly size={"sm"}><File/></Button>
+                    <Button isIconOnly size={"sm"}><Album/></Button>
+                </div>
+                <div>
+                    <Button isIconOnly size={"sm"}><CogTwo /></Button>
+                    <Button isIconOnly size={"sm"}><User/></Button>
+                </div>
+            </div>
+            <div className="w-full flex-1 flex flex-col overflow-hidden">
+                {/* Chats Area */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl w-full mx-auto">
+                    <div className="flex justify-end">
+                        <Surface
+                            variant={"tertiary"}
+                            className="p-2 rounded-xl max-w-[80%] text-sm leading-relaxed">
+                            How do I handle Enter to send and Shift+Enter for newline in a React textarea?
+                        </Surface>
+                    </div>
 
-  useEffect(() => {
-    let cancelled = false;
+                    <div className="flex justify-start">
+                        {/* AI Response txt */}
+                    </div>
+                </div>
 
-    (async () => {
-      try {
-        const {
-          data: { user },
-          error: userError
-        } = await supabase.auth.getUser();
-
-        const {
-          data: { session },
-          error: sessionError
-        } = await supabase.auth.getSession();
-        console.log("User", session);
-
-        if (userError || !user) {
-          setError(userError?.message || "Not authenticated");
-          setLoading(false);
-          return;
-        }
-
-        const githubToken = getGithubToken(user.id);
-        console.log("githubToken", githubToken);
-
-        if (!githubToken) {
-          setError("No GitHub token found for this user");
-          setLoading(false);
-          return;
-        }
-
-        const res = await fetch('https://api.github.com/user/repos',{
-          headers: {
-            Authorization: `Bearer ${session?.provider_token}`
-          }
-        });
-
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`API error: ${res.status} ${text}`);
-        }
-
-        const data = await res.json();
-        console.log(data);
-
-        if (!cancelled) {
-          setRepos(data);
-          setLoading(false);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Unknown error");
-          setLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return (<div>
-    <Button onClick={() => handleConnectGithub()}>Connect</Button>
-  </div>);
+                {/* Input Area */}
+                <div className="p-4 w-full max-w-3xl mx-auto">
+                    <Surface
+                        className="flex items-end rounded-2xl border p-2 transition-colors flex flex-col gap-2">
+      <textarea
+          rows={1}
+          placeholder="Message AI..."
+          onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  // trigger send logic
+              }
+          }}
+          className="w-full resize-none bg-transparent text-sm  focus:outline-none max-h-48"
+      />
+                        <Button isIconOnly size={"sm"}>
+                            A
+                        </Button>
+                    </Surface>
+                </div>
+            </div>
+        </div>
+    );
 }
