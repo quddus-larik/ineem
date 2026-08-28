@@ -25,6 +25,7 @@
     "@supabase/supabase-js": "^2.112.4",
     "langchain": "^1.5.10",
     "next": "16.3.2",
+    "octokit": "^5.0.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "^4.4.3"
