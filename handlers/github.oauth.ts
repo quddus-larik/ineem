@@ -4,7 +4,7 @@ export async function handleLoginGithub() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "github",
     options: {
-      scopes: "repo user:email",
+      scopes: "repo user:email admin:repo_hook",
       redirectTo: `${window.location.origin}/auth/callback`,
     },
   });
