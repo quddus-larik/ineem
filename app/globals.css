@@ -48,7 +48,7 @@
 
     /* Font Family */
     /* Make sure to load Inter font in your app */
-    --font-sans: var(--font-inter);
+    --font-sans: var(--font-geist-sans);
 }
 
 .dark,
