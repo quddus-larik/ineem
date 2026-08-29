@@ -12,11 +12,11 @@ const searchMyReposTool = new DynamicStructuredTool({
     name: "search_my_repos",
     description: "Search repositories with filters like language, stars, forks or push time.",
     schema: z.object({
-        language: z.string().optional().describe("Language filter, e.g., typescript"),
-        stars: z.number().optional().describe("Exact or minimum number of stars"),
-        forks: z.number().optional().describe("Exact or minimum number of forks"),
-        updatedWithinHours: z.number().optional().describe("Filter repos pushed within last N hours"),
-        name: z.string().optional().describe("Name filter, e.g., collaric, repo name").default(""),
+        language: z.string().nullable().optional().describe("Language filter, e.g., typescript"),
+        stars: z.number().nullable().optional().describe("Exact or minimum number of stars"),
+        forks: z.number().nullable().optional().describe("Exact or minimum number of forks"),
+        updatedWithinHours: z.number().nullable().optional().describe("Filter repos pushed within last N hours"),
+        name: z.string().nullable().optional().describe("Name filter, e.g., collaric, repo name"),
     }),
     func: async ({ language, stars, forks, updatedWithinHours, name }) => {
         try {
@@ -68,7 +68,7 @@ const searchMyReposTool = new DynamicStructuredTool({
 const llm = new ChatGroq({
     model: "openai/gpt-oss-20b",
     temperature: 0,
-    apiKey: "{key}",
+    apiKey: "{api}",
 });
 
 const agent = createReactAgent({
@@ -82,7 +82,7 @@ async function main() {
         messages: [
             {
                 role: "user",
-                content: "Is any repos exists in my github named collaric?",
+                content: "Show me the all repos",
             },
         ],
     });
