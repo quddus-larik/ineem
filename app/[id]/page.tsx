@@ -3,8 +3,7 @@
 import {useState, useRef, useEffect} from "react";
 import {useParams} from "next/navigation";
 import {Button, Surface, ScrollShadow} from "@heroui/react";
-import {EditOne, Search, File, Album, User, CogTwo, Send} from "@mynaui/icons-react";
-import {handleLoginGithub} from "@/handlers/github.oauth";
+import {Send} from "@mynaui/icons-react";
 import {supabase} from "@/lib/supabase/client";
 
 interface Message {
@@ -36,7 +35,7 @@ export default function Home() {
                 setUserData(user);
             }
             const {
-                data: { session },
+                data: {session},
                 error: sessionIdError
             } = await supabase.auth.getSession();
             console.log("user session", session);
@@ -136,20 +135,7 @@ export default function Home() {
     };
 
     return (
-        <div className="flex h-svh bg-background">
-            <div className="flex flex-col gap-2 justify-between p-3 *:flex *:flex-col *:gap-2">
-                <div>
-                    <Button isIconOnly size="sm"><EditOne/></Button>
-                    <Button isIconOnly size="sm"><Search/></Button>
-                    <Button isIconOnly size="sm"><File/></Button>
-                    <Button isIconOnly size="sm"><Album/></Button>
-                </div>
-                <div>
-                    <Button isIconOnly size="sm"><CogTwo/></Button>
-                    <Button isIconOnly size="sm" onClick={handleLoginGithub}><User/></Button>
-                </div>
-            </div>
-            <div className="w-full flex-1 flex flex-col overflow-hidden">
+        <div className="w-full flex-1 flex flex-col overflow-hidden h-svh">
                 {/* Chats Area */}
                 <ScrollShadow className="flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl w-full mx-auto">
                     {messages.map((msg, idx) => (
@@ -191,6 +177,5 @@ export default function Home() {
                     </Surface>
                 </div>
             </div>
-        </div>
     );
 }

@@ -11,7 +11,6 @@ export default function Page(){
             console.log(session)
             const { data: { user } } = await supabase.auth.getUser();
             console.log(user)
-
         })()
     }, []);
 
