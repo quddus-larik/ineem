@@ -1,17 +1,30 @@
 "use client";
 
-import {Button, Tooltip} from "@heroui/react";
-import {EditOne, Search, File, Album, User, CogTwo} from "@mynaui/icons-react";
+import {Button, Tooltip, Avatar} from "@heroui/react";
+import {EditOne, Search, File, Album, User, CogTwo, ChatMessages} from "@mynaui/icons-react";
+import {supabase} from "@/lib/supabase/client";
 import {handleLoginGithub} from "@/handlers/github.oauth";
+import {useState, useEffect} from "react";
 
 const SidebarButtons = [
-    {label: "New Chat", Icon: EditOne},
-    {label: "Search Chat", Icon: Search},
-    {label: "Files", Icon: File},
+    {label: "Chat", Icon: ChatMessages},
+    // {label: "Search Chat", Icon: Search},
+    // {label: "Files", Icon: File},
     {label: "Repositories", Icon: Album},
 ]
 
 export default function Sidebar() {
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        (async () => {
+            const {data: {user}, error} = await supabase.auth.getUser();
+            if (user !== null) {
+                setUser(user);
+            }
+        })();
+    }, []);
+
     return (
         <div className="flex flex-col gap-2 justify-between p-3 *:flex *:flex-col *:gap-2 h-svh">
             <div>
@@ -29,8 +42,20 @@ export default function Sidebar() {
                 }
             </div>
             <div>
-                <Button isIconOnly size="sm"><CogTwo/></Button>
-                <Button isIconOnly size="sm" onClick={handleLoginGithub}><User/></Button>
+                <Tooltip delay={0}>
+                    <Button isIconOnly size="lg" variant={"secondary"}><CogTwo/></Button>
+                    <Tooltip.Content placement={"right"} offset={10}>
+                        <p>Settings</p>
+                    </Tooltip.Content>
+                </Tooltip>
+                <Button isIconOnly size="lg" onClick={handleLoginGithub}>
+                    <Avatar>
+                        <Avatar.Image src={user?.user_metadata.avatar_url ?? ""}/>
+                        <Avatar.Fallback>
+                            <User size={22}/>
+                        </Avatar.Fallback>
+                    </Avatar>
+                </Button>
             </div>
         </div>
     );
