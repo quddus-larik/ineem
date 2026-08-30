@@ -1,8 +1,10 @@
 import {NextResponse} from "next/server";
-import {graphql} from "@octokit/graphql";
+import {Octokit} from "@octokit/rest";
 
 export async function GET(req: Request) {
-    const authHeader = req.headers.get("Authorization");
+    const authHeader: string | null = req.headers.get("Authorization");
+    const searchParams = req.nextUrl.searchParams;
+    const id = searchParams.get("id");
 
     const accessToken = authHeader?.startsWith("Bearer ")
         ? authHeader.slice(7)
@@ -15,50 +17,36 @@ export async function GET(req: Request) {
         );
     }
 
-    const client = graphql.defaults({
-        headers: {
-            authorization: `Bearer ${accessToken}`,
-        },
-    });
+    const octokit = new Octokit({auth: accessToken});
 
     try {
-        const result = await client(`
-      query {
-  viewer {
-    repositories(first: 100, ownerAffiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER], orderBy: { field: UPDATED_AT, direction: DESC }) {
-      nodes {
-        id
-        name
-        nameWithOwner
-        description
-        url
-        isPrivate
-        primaryLanguage {
-          name
-        }
-        # Total count of forks
-        forkCount
-        # Total count of stars (stargazers)
-        stargazerCount
-        # List of branches (refs targeting heads)
-        refs(first: 1, refPrefix: "refs/heads/") {
-          totalCount
-        }
-        # List of open pull requests
-        pullRequests(states: OPEN) {
-          totalCount
-        }
-      }
-    }
-  }
-}
+        const {data: reposResponse} = await octokit.rest.repos.listForAuthenticatedUser({
+            affiliation: ["owner", "collaborator", "organization_member"],
+            sort: "updated",
+            direction: "desc",
+            per_page: 100,
+        });
 
-    `);
+        const repos = reposResponse.map((repo: any) => ({
+            ...repo,
+            forkCount: repo.forks_count,
+            stargazerCount: repo.stargazers_count,
+            isPrivate: repo.private,
+            pullRequests: { totalCount: repo.open_issues_count },
+        }));
 
-        const repositories =
-            (result as any).viewer.repositories.nodes ?? [];
+        if (id) {
+            const repo = repos.find((r: any) => r.id.toString() === id);
+            if (!repo) {
+                return NextResponse.json(
+                    {message: "Repository not found"},
+                    {status: 404}
+                );
+            }
+            return NextResponse.json({repo});
+        }
 
-        return NextResponse.json({repositories});
+        return NextResponse.json({repositories: repos});
     } catch (error: any) {
         return NextResponse.json(
             {message: "Failed to fetch repositories", error: error.message},
