@@ -3,7 +3,7 @@
 import {supabase} from "@/lib/supabase/client";
 import {useEffect, useState} from "react";
 import {Card, Chip} from "@heroui/react";
-import { GitBranch, GitMerge, GitPullRequest, Star } from "@mynaui/icons-react";
+import {GitBranch, GitMerge, GitPullRequest, Star, Lock, LockOpen, Globe} from "@mynaui/icons-react";
 
 
 export default function Page() {
@@ -46,28 +46,30 @@ export default function Page() {
             <div className={"grid grid-cols-4 gap-2"}>
                 {
                     repos.length > 0 && repos.map((repo: unknown) => (
-                        <Card key={repo.id} className={"gap-1"}>
+                        <Card key={repo.id}
+                              className={"gap-1 ring-0 hover:ring-2 ring-accent active:ring-0 transition-all"}>
                             <Card.Header>
                                 <Card.Title>{repo.name}</Card.Title>
                             </Card.Header>
                             <Card.Content>
                                 <Card.Description className={"line-clamp-2"}>{repo.description ?? "--"}</Card.Description>
                             </Card.Content>
-                            <Card.Footer>
-                                <div className={"flex flex-row items-center gap-1 hover-ring"}>
+                            <Card.Footer className={"flex justify-between items-center"}>
+                                <div className={"flex flex-row items-center gap-1"}>
                                     <Chip>
-                                        <GitBranch size={15} />
+                                        <GitBranch size={15}/>
                                         <Chip.Label>{repo.forkCount}</Chip.Label>
                                     </Chip>
                                     <Chip>
-                                        <Star size={15} />
+                                        <Star size={15}/>
                                         <Chip.Label>{repo.stargazerCount}</Chip.Label>
                                     </Chip>
                                     <Chip>
-                                        <GitPullRequest size={15} />
+                                        <GitPullRequest size={15}/>
                                         <Chip.Label>{repo.pullRequests.totalCount}</Chip.Label>
                                     </Chip>
                                 </div>
+                                {repo.isPrivate ? <Lock size={15}/> : <Globe size={15}/>}
                             </Card.Footer>
                         </Card>
                     ))
