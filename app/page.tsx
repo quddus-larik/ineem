@@ -10,7 +10,7 @@ export default function Page(){
             const { data: { session }, error } = await supabase.auth.getSession();
             console.log(session)
             const { data: { user } } = await supabase.auth.getUser();
-            console.log(user)
+            console.log("user",user)
         })()
     }, []);
 
