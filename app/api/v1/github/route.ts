@@ -4,7 +4,8 @@ import {Octokit} from "@octokit/rest";
 export async function GET(req: Request) {
     const authHeader: string | null = req.headers.get("Authorization");
     const searchParams = req.nextUrl.searchParams;
-    const id = searchParams.get("id");
+    const owner = searchParams.get("owner");
+    const repo = searchParams.get("repo");
 
     const accessToken = authHeader?.startsWith("Bearer ")
         ? authHeader.slice(7)
@@ -35,15 +36,15 @@ export async function GET(req: Request) {
             pullRequests: { totalCount: repo.open_issues_count },
         }));
 
-        if (id) {
-            const repo = repos.find((r: any) => r.id.toString() === id);
-            if (!repo) {
+        if (owner && repo) {
+            const repoData = reposResponse.find((r: any) => r.name === repo && r.owner.login === owner);
+            if (!repoData) {
                 return NextResponse.json(
                     {message: "Repository not found"},
                     {status: 404}
                 );
             }
-            return NextResponse.json({repo});
+            return NextResponse.json({repo: repoData});
         }
 
         return NextResponse.json({repositories: repos});
