@@ -2,13 +2,23 @@
 
 import {useState, useRef, useEffect} from "react";
 import {useParams} from "next/navigation";
-import {Button, Surface, ScrollShadow} from "@heroui/react";
-import {Send} from "@mynaui/icons-react";
+import {Button, Surface, ScrollShadow, Chip, Card} from "@heroui/react";
+import {Send, Star, Globe} from "@mynaui/icons-react";
 import {supabase} from "@/lib/supabase/client";
 
 interface Message {
     role: "user" | "assistant";
     content: string;
+    repos?: {
+        name: string;
+        full_name: string;
+        description: string | null;
+        stars: number;
+        forks: number;
+        language: string | null;
+        pushed_at: string;
+        url: string;
+    }[];
 }
 
 export default function Home() {
@@ -64,7 +74,7 @@ export default function Home() {
 
             const {data: history} = await supabase
                 .from("chat")
-                .select("role, content")
+                .select("role, content, repos")
                 .eq("session_id", id)
                 .order("created_at", {ascending: true});
 
@@ -73,6 +83,7 @@ export default function Home() {
                     history.map((msg) => ({
                         role: msg.role as Message["role"],
                         content: msg.content,
+                        repos: msg.repos ?? undefined,
                     }))
                 );
             }
@@ -106,7 +117,7 @@ export default function Home() {
                 throw new Error(data.error || "Failed to send message");
             }
 
-            setMessages((prev) => [...prev, {role: "assistant", content: data.message}]);
+            setMessages((prev) => [...prev, {role: "assistant", content: data.message, repos: data.repos}]);
             if (data.sessionId) setSessionId(data.sessionId);
         } catch (error) {
             console.error("Chat error:", error);
@@ -136,24 +147,37 @@ export default function Home() {
 
     return (
         <div className="w-full flex-1 flex flex-col overflow-hidden h-svh">
-                {/* Chats Area */}
-                <ScrollShadow className="flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl w-full mx-auto">
-                    {messages.map((msg, idx) => (
-                        <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                            <Surface
-                                variant={msg.role === "user" ? "tertiary" : "secondary"}
-                                className="p-2 rounded-xl max-w-[80%] text-sm leading-relaxed"
-                            >
-                                {msg.content}
-                            </Surface>
-                        </div>
-                    ))}
-                    <div ref={messagesEndRef}/>
-                </ScrollShadow>
+            {/* Chats Area */}
+            <ScrollShadow className="flex-1 overflow-y-auto p-4 space-y-4 max-w-3xl w-full mx-auto">
+                {messages.map((msg, idx) => (
+                    <div key={idx} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                        <Surface
+                            variant={msg.role === "user" ? "tertiary" : "transparent"}
+                            className={`p-2 rounded-xl text-sm leading-relaxed ${msg.role == "user" ? "max-w-[80%]" : "w-full"}`}
+                        >
+                            {msg.content}
+                        </Surface>
+                        {
+                            (msg.repos) && (
+                                <div className={"flex gap-1 flex-wrap"}>
+                                    {
+                                        (msg.repos.length > 0) && (
+                                            msg.repos.map((itm, idx) => (
+                                                <Chip size={"sm"}>{itm.name}</Chip>
+                                            ))
+                                        )
+                                    }
+                                </div>
+                            )
+                        }
+                    </div>
+                ))}
+                <div ref={messagesEndRef}/>
+            </ScrollShadow>
 
-                {/* Input Area */}
-                <div className="p-4 w-full max-w-3xl mx-auto">
-                    <Surface className="flex items-end rounded-2xl border p-2 transition-colors flex-col gap-2">
+            {/* Input Area */}
+            <div className="p-4 w-full max-w-3xl mx-auto">
+                <Surface className="flex items-end rounded-2xl border p-2 transition-colors flex-col gap-2">
             <textarea
                 ref={textareaRef}
                 rows={1}
@@ -165,17 +189,17 @@ export default function Home() {
                 className="w-full resize-none bg-transparent text-sm focus:outline-none max-h-48"
                 style={{height: "auto"}}
             />
-                        <Button
-                            isIconOnly
-                            size="sm"
-                            onClick={handleSubmit}
-                            isDisabled={!input.trim() || isLoading}
-                            className="ms-auto"
-                        >
-                            <Send/>
-                        </Button>
-                    </Surface>
-                </div>
+                    <Button
+                        isIconOnly
+                        size="sm"
+                        onClick={handleSubmit}
+                        isDisabled={!input.trim() || isLoading}
+                        className="ms-auto"
+                    >
+                        <Send/>
+                    </Button>
+                </Surface>
             </div>
+        </div>
     );
 }
