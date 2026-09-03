@@ -1,37 +1,12 @@
 import {NextRequest, NextResponse} from "next/server";
-import {ChatGroq} from "@langchain/groq";
-import {StateGraph, Annotation} from "@langchain/langgraph";
 import {HumanMessage, AIMessage, BaseMessage} from "@langchain/core/messages";
 import {supabase} from "@/lib/supabase/client";
-
-const StateAnnotation = Annotation.Root({
-    messages: Annotation<BaseMessage[]>({
-        reducer: (x, y) => x.concat(y),
-    }),
-});
-
-const model = new ChatGroq({
-    model: "openai/gpt-oss-20b",
-    temperature: 0,
-    apiKey: process.env.GROQ_API_KEY,
-});
-
-async function callModel(state: typeof StateAnnotation.State) {
-    const response = await model.invoke(state.messages);
-    return {messages: [response]};
-}
-
-const workflow = new StateGraph(StateAnnotation)
-    .addNode("agent", callModel)
-    .addEdge("__start__", "agent")
-    .addEdge("agent", "__end__");
-
-const app = workflow.compile();
+import {createAgent} from "@/test/agent";
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const {message, sessionId, user} = body;
+        const {message, sessionId, user, token} = body;
 
         if (!message) {
             return NextResponse.json({error: "Message is required"}, {status: 400});
@@ -68,7 +43,7 @@ export async function POST(request: NextRequest) {
 
         const {data: history, error: historyError} = await supabase
             .from("chat")
-            .select("role, content")
+            .select("role, content, repos")
             .eq("session_id", session_id)
             .order("created_at", {ascending: true});
 
@@ -86,8 +61,21 @@ export async function POST(request: NextRequest) {
 
         messages.push(new HumanMessage(message));
 
-        const result = await app.invoke({messages});
+        const agent = createAgent(token);
+        const result = await agent.invoke({messages});
         const aiResponse = result.messages.at(-1)?.content as string;
+
+        const toolMessages = result.messages.filter(
+            (msg: any) => msg.constructor?.name === "ToolMessage" || msg.type === "tool"
+        );
+        const repos = toolMessages.flatMap((msg: any) => {
+            try {
+                const parsed = JSON.parse(msg.content);
+                return parsed.repos ?? [];
+            } catch {
+                return [];
+            }
+        });
 
         const {error: insertError} = await supabase.from("chat").insert([
             {
@@ -99,6 +87,7 @@ export async function POST(request: NextRequest) {
                 session_id,
                 role: "assistant",
                 content: aiResponse,
+                repos: repos.length > 0 ? repos : null,
             },
         ]);
 
@@ -109,6 +98,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             message: aiResponse,
             sessionId: session_id,
+            repos: repos.length > 0 ? repos : undefined,
         });
     } catch (error) {
         console.error("Chat error:", error);
