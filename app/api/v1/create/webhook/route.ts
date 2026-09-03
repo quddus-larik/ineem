@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
         const octokit = new Octokit({ auth: providerToken });
 
 
-        const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook`;
+        const webhookUrl = `https://in-im.vercel.app/api/webhook`;
 
         await octokit.rest.repos.createWebhook({
             owner,

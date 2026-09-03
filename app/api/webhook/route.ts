@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
             // Authenticate with your GitHub App/User Token
             const octokit = new Octokit({
-                auth: process.env.GITHUB_TOKEN,
+                auth: process.env.GITHUB_BOT_TOKEN,
             });
 
             // Post the PR Comment
