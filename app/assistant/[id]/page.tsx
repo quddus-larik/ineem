@@ -10,6 +10,7 @@ interface Message {
     role: "user" | "assistant";
     content: string;
     repos?: {
+        id: number;
         name: string;
         full_name: string;
         description: string | null;
