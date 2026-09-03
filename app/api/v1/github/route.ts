@@ -1,7 +1,7 @@
-import {NextResponse} from "next/server";
+import {NextRequest, NextResponse} from "next/server";
 import {Octokit} from "@octokit/rest";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
     const authHeader: string | null = req.headers.get("Authorization");
     const searchParams = req.nextUrl.searchParams;
     const owner = searchParams.get("owner");
@@ -22,7 +22,7 @@ export async function GET(req: Request) {
 
     try {
         const {data: reposResponse} = await octokit.rest.repos.listForAuthenticatedUser({
-            affiliation: ["owner", "collaborator", "organization_member"],
+            affiliation: "owner,collaborator,organization_member",
             sort: "updated",
             direction: "desc",
             per_page: 100,
@@ -48,9 +48,10 @@ export async function GET(req: Request) {
         }
 
         return NextResponse.json({repositories: repos});
-    } catch (error: any) {
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to fetch repositories";
         return NextResponse.json(
-            {message: "Failed to fetch repositories", error: error.message},
+            {message: "Failed to fetch repositories", error: message},
             {status: 500}
         );
     }

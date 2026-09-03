@@ -1,16 +1,17 @@
 "use client";
 
 import {Button, Tooltip, Avatar} from "@heroui/react";
-import {EditOne, Search, File, Album, User, CogTwo, ChatMessages} from "@mynaui/icons-react";
+import {EditOne, Search, File, Album, CogTwo, ChatMessages, User as UserIcon} from "@mynaui/icons-react";
+import type {User} from "@supabase/supabase-js";
 import {supabase} from "@/lib/supabase/client";
 import {handleLoginGithub} from "@/handlers/github.oauth";
 import {useState, useEffect} from "react";
 
 const SidebarButtons = [
-    {label: "Chat", Icon: ChatMessages},
+    {label: "Chat", Icon: ChatMessages, disabled: false},
     // {label: "Search Chat", Icon: Search},
     // {label: "Files", Icon: File},
-    {label: "Repositories", Icon: Album},
+    {label: "Repositories", Icon: Album, disabled: true},
 ]
 
 export default function Sidebar() {
@@ -31,7 +32,7 @@ export default function Sidebar() {
                 {
                     SidebarButtons.map((itm, idx) => (
                         <Tooltip delay={0} key={idx + 1}>
-                            <Button size={"lg"} variant={"secondary"} isIconOnly>
+                            <Button size={"lg"} variant={"secondary"} isDisabled={itm.disabled} isIconOnly>
                                 <itm.Icon/>
                             </Button>
                             <Tooltip.Content placement={"right"} offset={10}>
@@ -52,7 +53,7 @@ export default function Sidebar() {
                     <Avatar>
                         <Avatar.Image src={user?.user_metadata.avatar_url ?? ""}/>
                         <Avatar.Fallback>
-                            <User size={22}/>
+                            <UserIcon size={22}/>
                         </Avatar.Fallback>
                     </Avatar>
                 </Button>

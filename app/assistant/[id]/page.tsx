@@ -10,6 +10,7 @@ interface Message {
     role: "user" | "assistant";
     content: string;
     repos?: {
+        id: number;
         name: string;
         full_name: string;
         description: string | null;
@@ -163,7 +164,7 @@ export default function Home() {
                                     {
                                         (msg.repos.length > 0) && (
                                             msg.repos.map((itm, idx) => (
-                                                <Chip size={"sm"}>{itm.name}</Chip>
+                                                <Chip size={"sm"} key={itm.id}>{itm.name}</Chip>
                                             ))
                                         )
                                     }

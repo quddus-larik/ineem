@@ -5,11 +5,12 @@ import {useEffect, useState} from "react";
 import {Card, Chip} from "@heroui/react";
 import {GitBranch, GitMerge, GitPullRequest, Star, Lock, LockOpen, Globe} from "@mynaui/icons-react";
 import Link from "next/link"
+import type {Repository} from "@/app/types";
 
 
 export default function Page() {
 
-    const [repos, setRepos] = useState([]);
+    const [repos, setRepos] = useState<Repository[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -46,7 +47,7 @@ export default function Page() {
             </div>
             <div className={"grid grid-cols-4 gap-2"}>
                 {
-                    repos.length > 0 && repos.map((repo: unknown) => (
+                    repos.length > 0 && repos.map((repo) => (
                         <Link href={`/repositories/${repo.owner.login}/${repo.name}?rid=${repo.node_id}`} className={"w-full h-full"}>
                             <Card key={repo.id}
                                   className={"gap-1 hover:ring-2 ring-accent ring-0 transition-all min-h-32"}>
