@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
         });
 
         return NextResponse.json({ success: true, message: "Webhook attached successfully" }, { status: 201 });
-    } catch (error: unknown) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to attach webhook";
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }
